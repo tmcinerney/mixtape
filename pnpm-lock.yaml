@@ -91,6 +91,9 @@ importers:
       '@auth0/auth0-react':
         specifier: ^2.15.1
         version: 2.15.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@mixtape/shared':
+        specifier: workspace:^
+        version: link:../shared
       '@yotoplay/yoto-sdk':
         specifier: ^1.2.4
         version: 1.2.4

@@ -3,12 +3,14 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
 const mockUseAuth0 = vi.fn()
-const mockAuth0Provider = vi.fn(({ children }: { children: React.ReactNode }) => (
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockAuth0Provider = vi.fn(({ children }: any) => (
   <div data-testid="auth0-provider">{children}</div>
 ))
 
 vi.mock('@auth0/auth0-react', () => ({
-  Auth0Provider: (props: Record<string, unknown>) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Auth0Provider: (props: any) => {
     mockAuth0Provider(props)
     return <div data-testid="auth0-provider">{props.children as React.ReactNode}</div>
   },
