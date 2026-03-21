@@ -118,7 +118,7 @@ describe('CardGrid', () => {
     expect(link).toHaveAttribute('href', '/cards/card-1')
   })
 
-  it('shows loading state while fetching', () => {
+  it('shows skeleton while fetching', () => {
     mockGetMyCards.mockReturnValue(new Promise(() => {})) // never resolves
 
     render(
@@ -127,6 +127,6 @@ describe('CardGrid', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    expect(document.querySelector('.card-grid-skeleton')).toBeInTheDocument()
   })
 })

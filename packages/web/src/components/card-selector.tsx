@@ -1,5 +1,6 @@
 import { useYotoQuery } from '../hooks/use-yoto-query'
 import { ErrorState } from './error-state'
+import { Skeleton } from './skeleton'
 import '../styles/card-selector.css'
 
 interface Card {
@@ -24,7 +25,20 @@ export function CardSelector({ onSelect, onCancel }: CardSelectorProps) {
   } = useYotoQuery<Card[]>((sdk) => sdk.content.getMyCards())
 
   if (loading || !cards) {
-    return <p>Loading your cards...</p>
+    return (
+      <div>
+        <h3>Select a card</h3>
+        {Array.from({ length: 3 }, (_, i) => (
+          <Skeleton
+            key={i}
+            width="100%"
+            height="2.5em"
+            radius="var(--radius-sm)"
+            className="card-selector-skeleton"
+          />
+        ))}
+      </div>
+    )
   }
 
   if (error) {

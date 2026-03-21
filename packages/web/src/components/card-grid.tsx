@@ -3,6 +3,7 @@ import { useAuth0 } from '@auth0/auth0-react'
 import type { UserCard } from '@yotoplay/yoto-sdk'
 import { useYotoQuery } from '../hooks/use-yoto-query'
 import { ErrorState } from './error-state'
+import { CardGridSkeleton } from './skeleton'
 import '../styles/card-grid.css'
 
 interface CardGridProps {
@@ -39,7 +40,7 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
   }
 
   if (loading || !cards) {
-    return <div>Loading cards...</div>
+    return <CardGridSkeleton />
   }
 
   return (

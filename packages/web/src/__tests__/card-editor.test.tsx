@@ -180,10 +180,10 @@ describe('CardEditor', () => {
     expect(screen.getByDisplayValue('Chapter Two')).toBeInTheDocument()
   })
 
-  it('shows loading while fetching card', () => {
+  it('shows skeleton while fetching card', () => {
     mockGetCard.mockReturnValue(new Promise(() => {}))
     renderEditor()
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    expect(document.querySelector('.skeleton')).toBeInTheDocument()
   })
 })

@@ -3,6 +3,7 @@ import { useAuth0 } from '@auth0/auth0-react'
 import { useCardEditor } from '../hooks/use-card-editor'
 import { TrackList } from '../components/track-list'
 import { ErrorState } from '../components/error-state'
+import { Skeleton, TrackListSkeleton } from '../components/skeleton'
 import '../styles/card-editor.css'
 
 export function CardEditor() {
@@ -44,7 +45,18 @@ export function CardEditor() {
   }
 
   if (loading) {
-    return <div>Loading card...</div>
+    return (
+      <div className="card-editor">
+        <div className="card-editor-preview">
+          <Skeleton className="card-editor-artwork" />
+          <Skeleton width="100%" height="2em" radius="var(--radius-full)" />
+        </div>
+        <div className="card-editor-tracks">
+          <Skeleton width="80px" height="1.5em" radius="var(--radius-sm)" />
+          <TrackListSkeleton />
+        </div>
+      </div>
+    )
   }
 
   if (!card) {

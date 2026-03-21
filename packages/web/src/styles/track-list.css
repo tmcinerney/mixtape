@@ -1,16 +1,24 @@
-/* AIDEV-NOTE: Track rows — alternating background, no borders per design spec */
+/* AIDEV-NOTE: Track rows — alternating stripe + left accent for clear distinction */
 .track-list-item {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
-  transition: background-color var(--duration-normal) var(--easing-smooth);
+  border-left: 3px solid transparent;
+  transition:
+    background-color var(--duration-normal) var(--easing-smooth),
+    border-color var(--duration-normal) var(--easing-smooth);
 }
 
-/* Alternating background instead of border lines */
+/* Alternating stripe with stronger contrast than --color-surface */
 .track-list-item:nth-child(even) {
-  background-color: var(--color-surface);
+  background-color: var(--color-stripe);
+}
+
+.track-list-item:hover {
+  border-left-color: var(--color-primary);
+  background-color: var(--color-stripe);
 }
 
 .track-list-reorder {

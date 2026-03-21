@@ -26,3 +26,7 @@
   color: white;
   transform: scale(1.01);
 }
+
+.card-selector-skeleton {
+  margin-bottom: var(--space-sm);
+}
