@@ -156,7 +156,7 @@ describe('uploadToYoto', () => {
     const onProgress = vi.fn()
     await uploadToYoto('/tmp/test.m4a', 'test-token', onProgress)
 
-    const steps = onProgress.mock.calls.map(([step]: [string]) => step)
+    const steps = onProgress.mock.calls.map((args) => args[0] as string)
     expect(steps).toContain('upload')
     expect(steps).toContain('transcode')
   })

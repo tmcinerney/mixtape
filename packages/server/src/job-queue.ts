@@ -26,7 +26,7 @@ export class JobQueue {
   private jobs = new Map<string, JobEntry>()
   private maxConcurrent: number
   private cleanupDelayMs: number
-  private onStart?: (jobId: string) => void
+  private onStart: ((jobId: string) => void) | undefined
 
   constructor(options: QueueOptions = {}) {
     this.maxConcurrent = options.maxConcurrent ?? 3

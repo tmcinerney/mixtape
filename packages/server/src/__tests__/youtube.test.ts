@@ -17,15 +17,19 @@ import { spawn } from 'node:child_process'
 import { downloadAudio, classifyYtdlpError } from '../youtube'
 
 function createMockProcess() {
-  const proc = new EventEmitter() as ChildProcess & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proc = new EventEmitter() as any
+  proc.stderr = new EventEmitter()
+  proc.stdout = new EventEmitter()
+  proc.kill = vi.fn()
+  proc.pid = 12345
+  proc.stdin = null
+  proc.stdio = [null, proc.stdout, proc.stderr]
+  return proc as ChildProcess & {
     stderr: EventEmitter
     stdout: EventEmitter
     kill: ReturnType<typeof vi.fn>
   }
-  proc.stderr = new EventEmitter()
-  proc.stdout = new EventEmitter()
-  proc.kill = vi.fn()
-  return proc
 }
 
 beforeEach(() => {
