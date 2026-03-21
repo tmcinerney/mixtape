@@ -209,3 +209,10 @@ img {
   max-width: 100%;
   display: block;
 }
+
+/* App layout */
+.app-main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
+import '../styles/card-selector.css'
 
 interface Card {
   cardId: string
@@ -58,20 +59,19 @@ export function CardSelector({ onSelect, onCancel }: CardSelectorProps) {
       {cards.length === 0 ? (
         <p>No cards found. Create one in the Yoto app first.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="card-selector-list">
           {cards.map((card) => (
-            <li key={card.cardId} style={{ marginBottom: '0.5rem' }}>
-              <button
-                onClick={() => onSelect(card.cardId)}
-                style={{ width: '100%', textAlign: 'left', padding: '0.5rem' }}
-              >
+            <li key={card.cardId} className="card-selector-item">
+              <button className="card-selector-btn" onClick={() => onSelect(card.cardId)}>
                 {card.title}
               </button>
             </li>
           ))}
         </ul>
       )}
-      <button onClick={onCancel}>Cancel</button>
+      <button className="btn-ghost" onClick={onCancel}>
+        Cancel
+      </button>
     </div>
   )
 }

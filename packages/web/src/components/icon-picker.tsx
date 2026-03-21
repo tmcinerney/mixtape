@@ -1,31 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
 import type { DisplayIcon } from '@yotoplay/yoto-sdk'
+import '../styles/icon-picker.css'
 
 interface IconPickerProps {
   onSelect: (icon: DisplayIcon) => void
 }
-
-const gridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))',
-  gap: '0.5rem',
-  maxHeight: 300,
-  overflowY: 'auto',
-}
-
-const iconButtonStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '0.25rem',
-  border: '1px solid #e5e7eb',
-  borderRadius: '0.25rem',
-  background: 'transparent',
-  cursor: 'pointer',
-}
-
-const iconImgStyle: React.CSSProperties = { width: 32, height: 32 }
 
 // AIDEV-NOTE: Shared ref-based cache — icons are fetched once and reused
 // across remounts without module-level mutable state. The promise ref
@@ -80,17 +60,17 @@ export function IconPicker({ onSelect }: IconPickerProps) {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search icons..."
-        style={{ width: '100%', marginBottom: '0.5rem' }}
+        className="icon-picker-search"
       />
-      <div style={gridStyle}>
+      <div className="icon-picker-grid">
         {filtered.map((icon) => (
           <button
             key={icon.url}
             onClick={() => onSelect(icon)}
-            style={iconButtonStyle}
+            className="icon-picker-btn"
             title={icon.title}
           >
-            <img src={icon.url} alt={icon.title} style={iconImgStyle} />
+            <img src={icon.url} alt={icon.title} className="icon-picker-img" />
           </button>
         ))}
       </div>

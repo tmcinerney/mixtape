@@ -1,4 +1,5 @@
 import type { JobProgress } from '@mixtape/shared'
+import '../styles/upload-progress.css'
 
 const STEPS = ['download', 'convert', 'upload'] as const
 type StepName = (typeof STEPS)[number]
@@ -24,37 +25,31 @@ export function UploadProgress({ progress, title, onCancel }: UploadProgressProp
     progress && 'progress' in progress ? (progress as { progress: number }).progress : null
 
   return (
-    <div>
-      <p style={{ fontWeight: 600, marginBottom: '1rem' }}>{title}</p>
-      <div
-        style={{ display: 'flex', gap: '2rem', marginBottom: '1rem' }}
-        role="group"
-        aria-label="Upload progress"
-      >
+    <div className="upload-progress">
+      <p className="upload-progress-title">{title}</p>
+      <div className="upload-progress-steps" role="group" aria-label="Upload progress">
         {STEPS.map((step, idx) => {
           const isCurrent = idx === activeIdx
           const isComplete = idx < activeIdx
           const label = step.charAt(0).toUpperCase() + step.slice(1)
 
+          let labelClass = 'upload-step-label'
+          if (isCurrent) labelClass += ' upload-step-label--active'
+          if (isComplete) labelClass += ' upload-step-label--complete'
+
           return (
-            <div key={step} style={{ textAlign: 'center' }}>
-              <span
-                aria-current={isCurrent ? 'step' : undefined}
-                style={{
-                  fontWeight: isCurrent ? 700 : 400,
-                  opacity: isComplete ? 0.5 : 1,
-                }}
-              >
+            <div key={step} className="upload-step">
+              <span aria-current={isCurrent ? 'step' : undefined} className={labelClass}>
                 {label}
               </span>
               {isCurrent && percentage !== null ? (
-                <div style={{ fontSize: '0.875rem' }}>{percentage}%</div>
+                <div className="upload-step-percent">{percentage}%</div>
               ) : null}
             </div>
           )
         })}
       </div>
-      <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+      <button className="btn-ghost" onClick={onCancel}>
         Cancel
       </button>
     </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
 import { IconPicker } from './icon-picker'
 import type { DisplayIcon, YotoJson } from '@yotoplay/yoto-sdk'
+import '../styles/dialog.css'
 
 interface CreateCardDialogProps {
   open: boolean
@@ -52,49 +53,27 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
   }
 
   return (
-    <div
-      role="dialog"
-      aria-label="Create playlist"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 50,
-      }}
-    >
-      <div
-        style={{
-          background: 'var(--bg, white)',
-          borderRadius: '0.5rem',
-          padding: '1.5rem',
-          minWidth: 320,
-          maxWidth: 480,
-          maxHeight: '80vh',
-          overflowY: 'auto',
-        }}
-      >
-        <h2 style={{ marginTop: 0 }}>Create Playlist</h2>
+    <div role="dialog" aria-label="Create playlist" className="dialog-overlay">
+      <div className="dialog-panel">
+        <h2>Create Playlist</h2>
 
-        <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+        <label className="dialog-label">
           Title
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="My playlist"
-            style={{ display: 'block', width: '100%', marginTop: '0.25rem' }}
+            className="dialog-input"
           />
         </label>
 
-        <div style={{ marginBottom: '0.5rem' }}>
-          <button onClick={() => setShowIconPicker(!showIconPicker)}>
+        <div className="dialog-icon-section">
+          <button className="btn-secondary" onClick={() => setShowIconPicker(!showIconPicker)}>
             {icon ? `Icon: ${icon.title}` : 'Choose icon'}
           </button>
           {showIconPicker ? (
-            <div style={{ marginTop: '0.5rem' }}>
+            <div>
               <IconPicker
                 onSelect={(selected) => {
                   setIcon(selected)
@@ -105,11 +84,15 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
           ) : null}
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={creating}>
+        <div className="dialog-actions">
+          <button className="btn-ghost" onClick={onClose} disabled={creating}>
             Cancel
           </button>
-          <button onClick={handleCreate} disabled={creating || !title.trim()}>
+          <button
+            className="btn-primary"
+            onClick={handleCreate}
+            disabled={creating || !title.trim()}
+          >
             {creating ? 'Creating...' : 'Create'}
           </button>
         </div>

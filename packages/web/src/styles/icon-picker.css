@@ -1,0 +1,40 @@
+/* Icon picker grid */
+.icon-picker-search {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+  font-size: var(--font-size-sm);
+}
+
+.icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: var(--space-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.icon-picker-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-normal) var(--easing-smooth),
+    transform var(--duration-fast) var(--easing-spring);
+}
+
+.icon-picker-btn:hover {
+  background-color: var(--color-surface);
+  transform: scale(1.1);
+}
+
+.icon-picker-img {
+  width: 32px;
+  height: 32px;
+}

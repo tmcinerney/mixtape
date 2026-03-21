@@ -1,0 +1,20 @@
+/* AIDEV-NOTE: URL input form — large rounded input + coral pill button */
+.url-form {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: stretch;
+}
+
+.url-input {
+  flex: 1;
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-size-base);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+  border: none;
+  color: var(--color-text-primary);
+}
+
+.url-input:focus {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}

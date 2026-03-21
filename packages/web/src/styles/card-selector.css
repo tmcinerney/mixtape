@@ -1,0 +1,28 @@
+/* Card selector — list of cards for picking during upload flow */
+.card-selector-list {
+  padding: 0;
+}
+
+.card-selector-item {
+  margin-bottom: var(--space-sm);
+}
+
+.card-selector-btn {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  transition:
+    background-color var(--duration-normal) var(--easing-smooth),
+    transform var(--duration-fast) var(--easing-spring);
+}
+
+.card-selector-btn:hover {
+  background-color: var(--color-primary);
+  color: white;
+  transform: scale(1.01);
+}

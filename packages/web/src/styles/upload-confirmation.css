@@ -1,0 +1,21 @@
+/* Upload confirmation — success state */
+.upload-confirmation {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+}
+
+.upload-confirmation h2 {
+  color: var(--color-success);
+  margin-bottom: var(--space-md);
+}
+
+.upload-confirmation p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.upload-confirmation-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}

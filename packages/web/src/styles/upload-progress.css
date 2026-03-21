@@ -1,0 +1,45 @@
+/* Upload progress — 3-step horizontal indicator */
+.upload-progress {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+}
+
+.upload-progress-title {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-xl);
+  color: var(--color-text-primary);
+}
+
+.upload-progress-steps {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-xl);
+}
+
+.upload-step {
+  text-align: center;
+}
+
+.upload-step-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  transition: color var(--duration-normal) var(--easing-smooth);
+}
+
+.upload-step-label--active {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.upload-step-label--complete {
+  opacity: 0.5;
+  color: var(--color-success);
+}
+
+.upload-step-percent {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  margin-top: var(--space-xs);
+}
