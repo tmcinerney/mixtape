@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
-import { useYoto } from '../auth/yoto-provider'
 import type { UserCard } from '@yotoplay/yoto-sdk'
+import { useYotoQuery } from '../hooks/use-yoto-query'
+import { ErrorState } from './error-state'
 import '../styles/card-grid.css'
 
 interface CardGridProps {
@@ -16,27 +16,12 @@ const CARD_COLORS = ['#6366F1', '#14B8A6', '#F59E0B', '#22C55E', '#EC4899', '#8B
 // It does NOT include metadata/content. Full card data is loaded in the editor via getCard().
 export function CardGrid({ onAddPlaylist }: CardGridProps) {
   const { isAuthenticated, loginWithRedirect } = useAuth0()
-  const { sdk, isReady } = useYoto()
-  const [cards, setCards] = useState<UserCard[]>([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!isReady || !sdk) return
-
-    let cancelled = false
-    setLoading(true)
-
-    sdk.content.getMyCards().then((result) => {
-      if (!cancelled) {
-        setCards(result)
-        setLoading(false)
-      }
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [sdk, isReady])
+  const {
+    data: cards,
+    loading,
+    error,
+    refetch,
+  } = useYotoQuery<UserCard[]>((sdk) => sdk.content.getMyCards())
 
   if (!isAuthenticated) {
     return (
@@ -49,7 +34,11 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
     )
   }
 
-  if (loading) {
+  if (error) {
+    return <ErrorState message={`Failed to load cards: ${error}`} onRetry={refetch} />
+  }
+
+  if (loading || !cards) {
     return <div>Loading cards...</div>
   }
 

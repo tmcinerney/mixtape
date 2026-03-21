@@ -1,0 +1,9 @@
+.error-state {
+  text-align: center;
+  padding: var(--space-xl);
+}
+
+.error-state-message {
+  color: var(--color-error);
+  margin-bottom: var(--space-md);
+}

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -94,75 +94,5 @@ describe('AuthProvider', () => {
     )
 
     expect(screen.getByTestId('child-content')).toBeInTheDocument()
-  })
-})
-
-describe('ProtectedRoute', () => {
-  beforeEach(() => {
-    mockUseAuth0.mockClear()
-  })
-
-  it('renders children when authenticated', async () => {
-    mockUseAuth0.mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-      loginWithRedirect: vi.fn(),
-    })
-
-    // AIDEV-NOTE: dynamic import to pick up fresh mock state
-    const { ProtectedRoute } = await import('../auth/auth-provider')
-
-    render(
-      <MemoryRouter>
-        <ProtectedRoute>
-          <div data-testid="protected-content">secret</div>
-        </ProtectedRoute>
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByTestId('protected-content')).toBeInTheDocument()
-  })
-
-  it('redirects to login when not authenticated', async () => {
-    const loginWithRedirect = vi.fn()
-    mockUseAuth0.mockReturnValue({
-      isAuthenticated: false,
-      isLoading: false,
-      loginWithRedirect,
-    })
-
-    const { ProtectedRoute } = await import('../auth/auth-provider')
-
-    render(
-      <MemoryRouter>
-        <ProtectedRoute>
-          <div data-testid="protected-content">secret</div>
-        </ProtectedRoute>
-      </MemoryRouter>,
-    )
-
-    await waitFor(() => {
-      expect(loginWithRedirect).toHaveBeenCalled()
-    })
-  })
-
-  it('shows loading state while auth is resolving', async () => {
-    mockUseAuth0.mockReturnValue({
-      isAuthenticated: false,
-      isLoading: true,
-      loginWithRedirect: vi.fn(),
-    })
-
-    const { ProtectedRoute } = await import('../auth/auth-provider')
-
-    render(
-      <MemoryRouter>
-        <ProtectedRoute>
-          <div data-testid="protected-content">secret</div>
-        </ProtectedRoute>
-      </MemoryRouter>,
-    )
-
-    expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument()
   })
 })

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import { useEffect } from 'react'
-import { Auth0Provider, useAuth0 } from '@auth0/auth0-react'
+import { Auth0Provider } from '@auth0/auth0-react'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -25,24 +24,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </Auth0Provider>
   )
-}
-
-interface ProtectedRouteProps {
-  children: ReactNode
-}
-
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0()
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      loginWithRedirect()
-    }
-  }, [isLoading, isAuthenticated, loginWithRedirect])
-
-  if (isLoading || !isAuthenticated) {
-    return null
-  }
-
-  return <>{children}</>
 }

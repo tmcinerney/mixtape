@@ -1,28 +1,7 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
-import { useAuth0 } from '@auth0/auth0-react'
 import { LandingPage } from './pages/landing'
 import { CardEditor } from './pages/card-editor'
-
-// AIDEV-NOTE: Auth0 processes the callback params automatically via the provider.
-// This component just waits for that to finish, then redirects to /.
-function CallbackPage() {
-  const { isLoading, isAuthenticated, error } = useAuth0()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/', { replace: true })
-    }
-  }, [isLoading, isAuthenticated, navigate])
-
-  if (error) {
-    return <div>Login failed: {error.message}</div>
-  }
-
-  return <div>Completing login...</div>
-}
+import { CallbackPage } from './pages/callback'
 
 export const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },

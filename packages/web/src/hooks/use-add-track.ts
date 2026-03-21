@@ -1,23 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
-
-interface Track {
-  key: string
-  trackUrl: string
-  format: string
-  channels: string
-  type: string
-  overlayLabel?: string
-  [key: string]: unknown
-}
-
-interface Chapter {
-  key: string
-  title?: string
-  tracks: Track[]
-  overlayLabel?: string
-  [key: string]: unknown
-}
+import type { Chapter } from '../types/yoto'
 
 interface AddTrackParams {
   cardId: string

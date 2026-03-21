@@ -1,17 +1,7 @@
+import type { Track } from '../types/yoto'
 import '../styles/track-list.css'
 
-// AIDEV-NOTE: Each "track" in the UI represents a Yoto chapter.
-// A chapter has a key, title, and a tracks array (usually one track per chapter).
-// The first track's trackUrl is what the device plays.
-export interface Track {
-  key: string
-  title: string
-  trackUrl: string
-  format: string
-  channels: string
-  type: string
-  duration?: number
-}
+export type { Track }
 
 interface TrackListProps {
   tracks: Track[]

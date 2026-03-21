@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useYoto } from '../auth/yoto-provider'
+import { useYotoQuery } from '../hooks/use-yoto-query'
+import { ErrorState } from './error-state'
 import '../styles/card-selector.css'
 
 interface Card {
@@ -16,41 +16,19 @@ interface CardSelectorProps {
 // (the upload flow hook handles loginWithRedirect before reaching this point).
 // It fetches cards from the Yoto SDK and renders a selection list.
 export function CardSelector({ onSelect, onCancel }: CardSelectorProps) {
-  const { sdk, isReady } = useYoto()
-  const [cards, setCards] = useState<Card[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    data: cards,
+    loading,
+    error,
+    refetch,
+  } = useYotoQuery<Card[]>((sdk) => sdk.content.getMyCards())
 
-  useEffect(() => {
-    if (!isReady || !sdk) return
-
-    let cancelled = false
-    sdk.content
-      .getMyCards()
-      .then((result: Card[]) => {
-        if (!cancelled) {
-          setCards(result)
-          setLoading(false)
-        }
-      })
-      .catch((err: Error) => {
-        if (!cancelled) {
-          setError(err.message)
-          setLoading(false)
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [isReady, sdk])
-
-  if (loading) {
+  if (loading || !cards) {
     return <p>Loading your cards...</p>
   }
 
   if (error) {
-    return <p>Failed to load cards: {error}</p>
+    return <ErrorState message={`Failed to load cards: ${error}`} onRetry={refetch} />
   }
 
   return (

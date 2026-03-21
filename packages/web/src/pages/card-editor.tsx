@@ -1,146 +1,28 @@
-import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
-import { useYoto } from '../auth/yoto-provider'
-import { TrackList, type Track } from '../components/track-list'
+import { useCardEditor } from '../hooks/use-card-editor'
+import { TrackList } from '../components/track-list'
+import { ErrorState } from '../components/error-state'
 import '../styles/card-editor.css'
-
-// AIDEV-NOTE: Actual shape returned by sdk.content.getCard() — the SDK
-// unwraps the { card: ... } wrapper from the raw API response.
-interface CardData {
-  cardId: string
-  title: string
-  metadata: Record<string, unknown>
-  content: Record<string, unknown>
-}
-
-interface Chapter {
-  key: string
-  title?: string
-  tracks: {
-    key: string
-    trackUrl: string
-    format: string
-    channels: string
-    type: string
-    title?: string
-    duration?: number
-    [k: string]: unknown
-  }[]
-  [k: string]: unknown
-}
-
-// AIDEV-NOTE: Convert chapters array to flat track list for the UI.
-// Each chapter becomes one "track" — we use the first track's URL.
-function chaptersToTracks(chapters: Chapter[]): Track[] {
-  return chapters.map((ch) => {
-    const firstTrack = ch.tracks[0]
-    return {
-      key: ch.key,
-      title: ch.title ?? firstTrack?.title ?? 'Untitled',
-      trackUrl: firstTrack?.trackUrl ?? '',
-      format: firstTrack?.format ?? 'opus',
-      channels: firstTrack?.channels ?? 'stereo',
-      type: firstTrack?.type ?? 'audio',
-      ...(firstTrack?.duration !== undefined ? { duration: firstTrack.duration } : {}),
-    }
-  })
-}
-
-// AIDEV-NOTE: Convert flat track list back to chapters array for the API.
-// Each track becomes a chapter with a single-element tracks array.
-function tracksToChapters(tracks: Track[], originalChapters: Chapter[]): Chapter[] {
-  return tracks.map((t, i) => {
-    // Preserve original chapter data (display, ambient, etc) if it exists
-    const original = originalChapters.find((ch) => ch.key === t.key)
-    const key = String(i).padStart(2, '0')
-    return {
-      ...original,
-      key,
-      title: t.title,
-      overlayLabel: String(i + 1),
-      tracks: [
-        {
-          ...(original?.tracks[0] ?? {}),
-          key: '01',
-          trackUrl: t.trackUrl,
-          format: t.format,
-          channels: t.channels,
-          type: t.type,
-          title: t.title,
-          overlayLabel: String(i + 1),
-        },
-      ],
-    }
-  })
-}
 
 export function CardEditor() {
   const { cardId } = useParams<{ cardId: string }>()
   const navigate = useNavigate()
   const { isAuthenticated, isLoading: authLoading, loginWithRedirect } = useAuth0()
-  const { sdk, isReady } = useYoto()
-  const [card, setCard] = useState<CardData | null>(null)
-  const [originalChapters, setOriginalChapters] = useState<Chapter[]>([])
-  const [title, setTitle] = useState('')
-  const [tracks, setTracks] = useState<Track[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (!isReady || !sdk || !cardId) return
-
-    let cancelled = false
-    setLoading(true)
-
-    sdk.content.getCard(cardId).then((result) => {
-      if (!cancelled) {
-        // AIDEV-NOTE: SDK returns flat { cardId, title, content, metadata }
-        const data = result as unknown as CardData
-        const chapters = (data.content?.chapters ?? []) as unknown as Chapter[]
-        setCard(data)
-        setOriginalChapters(chapters)
-        setTitle(data.title)
-        setTracks(chaptersToTracks(chapters))
-        setLoading(false)
-      }
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [sdk, isReady, cardId])
-
-  const handleTitleChange = useCallback((index: number, newTitle: string) => {
-    setTracks((prev) => prev.map((t, i) => (i === index ? { ...t, title: newTitle } : t)))
-  }, [])
-
-  const handleDelete = useCallback((index: number) => {
-    setTracks((prev) => {
-      const next = prev.filter((_, i) => i !== index)
-      return next.map((t, i) => ({ ...t, key: String(i).padStart(2, '0') }))
-    })
-  }, [])
-
-  const handleSave = async () => {
-    if (!sdk || !card || !cardId) return
-
-    setSaving(true)
-    // AIDEV-NOTE: merge onto existing card data, include cardId for update
-    const payload = {
-      ...card,
-      cardId,
-      title,
-      content: {
-        ...card.content,
-        chapters: tracksToChapters(tracks, originalChapters),
-      },
-    }
-
-    await sdk.content.updateCard(payload as unknown as Parameters<typeof sdk.content.updateCard>[0])
-    setSaving(false)
-    navigate('/')
-  }
+  const {
+    card,
+    title,
+    setTitle,
+    tracks,
+    setTracks,
+    loading,
+    saving,
+    error,
+    handleTitleChange,
+    handleDelete,
+    handleSave,
+  } = useCardEditor(cardId)
 
   if (authLoading) {
     return <div>Loading...</div>
@@ -157,6 +39,10 @@ export function CardEditor() {
     )
   }
 
+  if (error) {
+    return <ErrorState message={error} />
+  }
+
   if (loading) {
     return <div>Loading card...</div>
   }
@@ -166,6 +52,11 @@ export function CardEditor() {
   }
 
   const metadata = card.metadata as { icon?: string; color?: string }
+
+  const onSave = async () => {
+    await handleSave()
+    navigate('/')
+  }
 
   return (
     <div className="card-editor">
@@ -200,7 +91,7 @@ export function CardEditor() {
         />
 
         <div className="card-editor-actions">
-          <button className="btn-primary" onClick={handleSave} disabled={saving} aria-label="Save">
+          <button className="btn-primary" onClick={onSave} disabled={saving} aria-label="Save">
             {saving ? 'Saving...' : 'Save'}
           </button>
           <button className="btn-ghost" onClick={() => navigate('/')} aria-label="Cancel">
