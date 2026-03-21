@@ -24,10 +24,11 @@ describe('useAddTrack', () => {
     mockGetCard.mockClear()
   })
 
+  // AIDEV-NOTE: SDK updateCard takes YotoJson { content, metadata }
   it('adds a track to an empty card', async () => {
     mockGetCard.mockResolvedValue({
-      card: { cardId: 'card-1' },
       content: { chapters: {} },
+      metadata: { cardId: 'card-1' },
     })
     mockUpdateCard.mockResolvedValue(undefined)
 
@@ -42,34 +43,36 @@ describe('useAddTrack', () => {
     })
 
     expect(mockUpdateCard).toHaveBeenCalledWith(
-      'card-1',
       expect.objectContaining({
-        activity: 'none',
-        restricted: false,
-        version: 2,
-        config: { onlineOnly: true },
-        chapters: {
-          '00': {
-            title: 'My Track',
-            format: 'opus',
-            channels: 'stereo',
-            type: 'audio',
-            url: 'https://media.yoto.io/some-file.opus',
+        content: expect.objectContaining({
+          activity: 'none',
+          restricted: false,
+          version: 2,
+          config: { onlineOnly: true },
+          chapters: {
+            '00': {
+              title: 'My Track',
+              format: 'opus',
+              channels: 'stereo',
+              type: 'audio',
+              url: 'https://media.yoto.io/some-file.opus',
+            },
           },
-        },
+        }),
+        metadata: { cardId: 'card-1' },
       }),
     )
   })
 
   it('appends a track after existing chapters', async () => {
     mockGetCard.mockResolvedValue({
-      card: { cardId: 'card-1' },
       content: {
         chapters: {
           '00': { title: 'First', format: 'opus', channels: 'stereo', type: 'audio', url: 'a' },
           '01': { title: 'Second', format: 'opus', channels: 'stereo', type: 'audio', url: 'b' },
         },
       },
+      metadata: {},
     })
     mockUpdateCard.mockResolvedValue(undefined)
 
@@ -84,8 +87,8 @@ describe('useAddTrack', () => {
     })
 
     const call = mockUpdateCard.mock.calls[0]!
-    const content = call[1] as Record<string, unknown>
-    const chapters = content.chapters as Record<string, { title: string }>
+    const yotoJson = call[0] as { content: Record<string, unknown> }
+    const chapters = yotoJson.content.chapters as Record<string, { title: string }>
     expect(chapters['02']).toEqual({
       title: 'Third Track',
       format: 'opus',
@@ -111,8 +114,8 @@ describe('useAddTrack', () => {
     }
 
     mockGetCard.mockResolvedValue({
-      card: { cardId: 'card-1' },
       content: { chapters: existingChapters },
+      metadata: {},
     })
     mockUpdateCard.mockResolvedValue(undefined)
 
@@ -127,16 +130,16 @@ describe('useAddTrack', () => {
     })
 
     const call = mockUpdateCard.mock.calls[0]!
-    const content = call[1] as Record<string, unknown>
-    const chapters = content.chapters as Record<string, { title: string }>
+    const yotoJson = call[0] as { content: Record<string, unknown> }
+    const chapters = yotoJson.content.chapters as Record<string, { title: string }>
     expect(chapters['10']).toBeDefined()
     expect(chapters['10']!.title).toBe('Eleventh')
   })
 
   it('includes required card defaults', async () => {
     mockGetCard.mockResolvedValue({
-      card: { cardId: 'card-1' },
       content: { chapters: {} },
+      metadata: {},
     })
     mockUpdateCard.mockResolvedValue(undefined)
 
@@ -151,11 +154,11 @@ describe('useAddTrack', () => {
     })
 
     const call = mockUpdateCard.mock.calls[0]!
-    const content = call[1] as Record<string, unknown>
-    expect(content.activity).toBe('none')
-    expect(content.restricted).toBe(false)
-    expect(content.version).toBe(2)
-    expect(content.config).toEqual({ onlineOnly: true })
+    const yotoJson = call[0] as { content: Record<string, unknown> }
+    expect(yotoJson.content.activity).toBe('none')
+    expect(yotoJson.content.restricted).toBe(false)
+    expect(yotoJson.content.version).toBe(2)
+    expect(yotoJson.content.config).toEqual({ onlineOnly: true })
   })
 
   it('sets loading state during operation', async () => {
@@ -183,7 +186,7 @@ describe('useAddTrack', () => {
     expect(result.current.isAdding).toBe(true)
 
     await act(async () => {
-      resolveGetCard!({ card: { cardId: 'card-1' }, content: { chapters: {} } })
+      resolveGetCard!({ content: { chapters: {} }, metadata: {} })
       await addPromise!
     })
 

@@ -36,6 +36,7 @@ export function useAddTrack() {
       setError(null)
 
       try {
+        // AIDEV-NOTE: SDK getCard returns YotoJson { content, metadata }
         const cardData = await sdk.content.getCard(cardId)
         const existingChapters = (cardData.content?.chapters ?? {}) as Record<string, Chapter>
 
@@ -57,9 +58,13 @@ export function useAddTrack() {
           [paddedKey]: newChapter,
         }
 
-        await sdk.content.updateCard(cardId, {
-          ...CARD_DEFAULTS,
-          chapters: updatedChapters,
+        // AIDEV-NOTE: updateCard takes YotoJson { content, metadata }
+        await sdk.content.updateCard({
+          content: {
+            ...CARD_DEFAULTS,
+            chapters: updatedChapters,
+          },
+          metadata: cardData.metadata ?? {},
         })
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error'

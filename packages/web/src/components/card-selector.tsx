@@ -30,11 +30,12 @@ export function CardSelector({ onSelect, onCancel }: CardSelectorProps) {
     if (!isReady || !sdk) return
 
     let cancelled = false
-    sdk.library
-      .getCards()
-      .then((result: { cards: Card[] }) => {
+    // AIDEV-NOTE: SDK method is content.getMyCards(), returns UserCard[] directly
+    sdk.content
+      .getMyCards()
+      .then((result: Card[]) => {
         if (!cancelled) {
-          setCards(result.cards)
+          setCards(result)
           setLoading(false)
         }
       })
