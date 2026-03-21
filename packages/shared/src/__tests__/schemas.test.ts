@@ -76,9 +76,19 @@ describe('JobProgressSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('accepts a complete event with mediaUrl', () => {
-    const result = JobProgressSchema.safeParse({ step: 'complete', mediaUrl: 'yoto:#abc123' })
+  it('accepts a complete event with mediaUrl and titles', () => {
+    const result = JobProgressSchema.safeParse({
+      step: 'complete',
+      mediaUrl: 'yoto:#abc123',
+      title: 'Rick Astley - Never Gonna Give You Up (Official Music Video)',
+      suggestedTitle: 'Never Gonna Give You Up',
+    })
     expect(result.success).toBe(true)
+  })
+
+  it('rejects complete event without titles', () => {
+    const result = JobProgressSchema.safeParse({ step: 'complete', mediaUrl: 'yoto:#abc123' })
+    expect(result.success).toBe(false)
   })
 
   it('accepts an error event with message and code', () => {

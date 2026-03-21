@@ -3,13 +3,33 @@ import { useAuth0 } from '@auth0/auth0-react'
 import type { JobProgress } from '@mixtape/shared'
 import { startJob, cancelJob } from '../api/client'
 
-type FlowState = 'idle' | 'selecting-card' | 'uploading' | 'adding-track' | 'complete' | 'error'
+type FlowState =
+  | 'idle'
+  | 'selecting-card'
+  | 'uploading'
+  | 'confirming'
+  | 'adding-track'
+  | 'complete'
+  | 'error'
+
+interface TrackReadyParams {
+  mediaUrl: string
+  cardId: string
+  title: string
+  iconUrl?: string
+}
 
 interface UploadFlowOptions {
-  // AIDEV-NOTE: called when SSE reports complete — the hook handles the
-  // adding-track transition internally rather than exposing it as a state
-  // the parent has to watch via useEffect (which caused infinite re-renders).
-  onTrackReady: (mediaUrl: string, cardId: string) => Promise<void>
+  // AIDEV-NOTE: called when user confirms the track details — the hook
+  // transitions to adding-track, then complete/error based on the result.
+  onTrackReady: (params: TrackReadyParams) => Promise<void>
+}
+
+/** Data available during the confirming state */
+export interface ConfirmData {
+  mediaUrl: string
+  title: string
+  suggestedTitle: string
 }
 
 interface UploadFlowResult {
@@ -18,8 +38,12 @@ interface UploadFlowResult {
   cardId: string | null
   progress: JobProgress | null
   error: string | null
+  /** Available when state === 'confirming' */
+  confirmData: ConfirmData | null
   submitUrl: (url: string) => void
   selectCard: (cardId: string) => void
+  /** User confirms the track title and optional icon */
+  confirmTrack: (title: string, iconUrl?: string) => void
   cancel: () => void
   reset: () => void
 }
@@ -33,6 +57,7 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
   const [jobId, setJobId] = useState<string | null>(null)
   const [progress, setProgress] = useState<JobProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [confirmData, setConfirmData] = useState<ConfirmData | null>(null)
 
   const streamRef = useRef<{ close: () => void } | null>(null)
 
@@ -52,43 +77,40 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
     [isAuthenticated, loginWithRedirect],
   )
 
-  // AIDEV-NOTE: SSE event handling extracted from selectCard for clarity.
-  // Called once the job stream is established — listens for progress/complete/error.
-  const listenToStream = useCallback(
-    (eventSource: EventTarget & { close: () => void }, selectedCardId: string) => {
-      eventSource.addEventListener('progress', (event: Event) => {
-        try {
-          const data = JSON.parse((event as MessageEvent).data as string) as JobProgress
-          if (data.step === 'complete') {
-            eventSource.close()
-            const url = (data as { step: 'complete'; mediaUrl: string }).mediaUrl
-            setState('adding-track')
-            onTrackReady(url, selectedCardId)
-              .then(() => setState('complete'))
-              .catch((err) => {
-                setError(err instanceof Error ? err.message : 'Failed to add track')
-                setState('error')
-              })
-          } else if (data.step === 'error') {
-            eventSource.close()
-            setError((data as { step: 'error'; message: string }).message)
-            setState('error')
-          } else {
-            setProgress(data)
+  // AIDEV-NOTE: SSE event handling. On complete, transitions to 'confirming'
+  // so the user can edit the title and pick an icon before adding the track.
+  const listenToStream = useCallback((eventSource: EventTarget & { close: () => void }) => {
+    eventSource.addEventListener('progress', (event: Event) => {
+      try {
+        const data = JSON.parse((event as MessageEvent).data as string) as JobProgress
+        if (data.step === 'complete') {
+          eventSource.close()
+          const { mediaUrl, title, suggestedTitle } = data as {
+            step: 'complete'
+            mediaUrl: string
+            title: string
+            suggestedTitle: string
           }
-        } catch {
-          // ignore parse errors
+          setConfirmData({ mediaUrl, title, suggestedTitle })
+          setState('confirming')
+        } else if (data.step === 'error') {
+          eventSource.close()
+          setError((data as { step: 'error'; message: string }).message)
+          setState('error')
+        } else {
+          setProgress(data)
         }
-      })
+      } catch {
+        // ignore parse errors
+      }
+    })
 
-      eventSource.addEventListener('error', () => {
-        eventSource.close()
-        setError('Connection lost')
-        setState('error')
-      })
-    },
-    [onTrackReady],
-  )
+    eventSource.addEventListener('error', () => {
+      eventSource.close()
+      setError('Connection lost')
+      setState('error')
+    })
+  }, [])
 
   const selectCard = useCallback(
     async (selectedCardId: string) => {
@@ -109,13 +131,35 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
 
         setJobId(jid)
         streamRef.current = eventSource
-        listenToStream(eventSource, selectedCardId)
+        listenToStream(eventSource)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to start job')
         setState('error')
       }
     },
     [isAuthenticated, loginWithRedirect, getAccessTokenSilently, youtubeUrl, listenToStream],
+  )
+
+  // AIDEV-NOTE: Called from the confirm screen with the user's final title choice
+  // and optional icon. Triggers onTrackReady which adds the track to the card.
+  const confirmTrack = useCallback(
+    (title: string, iconUrl?: string) => {
+      if (!confirmData || !cardId) return
+
+      setState('adding-track')
+      onTrackReady({
+        mediaUrl: confirmData.mediaUrl,
+        cardId,
+        title,
+        ...(iconUrl !== undefined ? { iconUrl } : {}),
+      })
+        .then(() => setState('complete'))
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Failed to add track')
+          setState('error')
+        })
+    },
+    [confirmData, cardId, onTrackReady],
   )
 
   const cancel = useCallback(async () => {
@@ -137,6 +181,7 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
     setJobId(null)
     setProgress(null)
     setError(null)
+    setConfirmData(null)
   }, [jobId, getAccessTokenSilently])
 
   const reset = useCallback(() => {
@@ -150,6 +195,7 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
     setJobId(null)
     setProgress(null)
     setError(null)
+    setConfirmData(null)
   }, [])
 
   return {
@@ -158,8 +204,10 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
     cardId,
     progress,
     error,
+    confirmData,
     submitUrl,
     selectCard,
+    confirmTrack,
     cancel,
     reset,
   }

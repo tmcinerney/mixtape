@@ -16,7 +16,12 @@ export const JobProgressSchema = z.discriminatedUnion('step', [
   z.object({ step: z.literal('convert'), progress: z.number().min(0).max(100) }),
   z.object({ step: z.literal('upload'), progress: z.number().min(0).max(100) }),
   z.object({ step: z.literal('transcode'), progress: z.number().min(0).max(100) }),
-  z.object({ step: z.literal('complete'), mediaUrl: z.string() }),
+  z.object({
+    step: z.literal('complete'),
+    mediaUrl: z.string(),
+    title: z.string(),
+    suggestedTitle: z.string(),
+  }),
   z.object({ step: z.literal('error'), message: z.string(), code: z.string() }),
 ])
 

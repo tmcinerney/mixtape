@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUploadFlow } from '../hooks/use-upload-flow'
 import { useAddTrack } from '../hooks/use-add-track'
 import { UrlInput } from '../components/url-input'
 import { CardSelector } from '../components/card-selector'
 import { UploadProgress } from '../components/upload-progress'
+import { TrackConfirm } from '../components/track-confirm'
 import { UploadConfirmation } from '../components/upload-confirmation'
 import { CardGrid } from '../components/card-grid'
 import { CreateCardDialog } from '../components/create-card-dialog'
@@ -14,13 +15,13 @@ export function LandingPage() {
   const { addTrack } = useAddTrack()
   const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)
+  // AIDEV-NOTE: Track the confirmed title so we can show it in the success screen.
+  const confirmedTitleRef = useRef('Track')
 
-  // AIDEV-NOTE: onTrackReady is called by the upload flow hook when the SSE
-  // stream reports completion. No useEffect needed — the hook drives the
-  // transition directly via this callback.
   const handleTrackReady = useCallback(
-    async (mediaUrl: string, cardId: string) => {
-      await addTrack({ cardId, mediaUrl, title: 'New track' })
+    async (params: { mediaUrl: string; cardId: string; title: string; iconUrl?: string }) => {
+      confirmedTitleRef.current = params.title
+      await addTrack({ cardId: params.cardId, mediaUrl: params.mediaUrl, title: params.title })
     },
     [addTrack],
   )
@@ -49,6 +50,14 @@ export function LandingPage() {
           />
         ) : null}
 
+        {flow.state === 'confirming' && flow.confirmData ? (
+          <TrackConfirm
+            data={flow.confirmData}
+            onConfirm={flow.confirmTrack}
+            onCancel={flow.reset}
+          />
+        ) : null}
+
         {flow.state === 'adding-track' ? (
           <p className="landing-adding">Adding track to card...</p>
         ) : null}
@@ -56,7 +65,7 @@ export function LandingPage() {
         {flow.state === 'complete' ? (
           <UploadConfirmation
             cardName={flow.cardId ?? 'Card'}
-            trackTitle={flow.youtubeUrl ?? 'Track'}
+            trackTitle={confirmedTitleRef.current}
             cardId={flow.cardId ?? ''}
             onViewCard={(id) => navigate(`/cards/${id}`)}
             onAddAnother={flow.reset}

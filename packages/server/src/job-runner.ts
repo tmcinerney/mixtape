@@ -2,6 +2,8 @@ import { unlink } from 'node:fs/promises'
 import type { JobProgress } from '@mixtape/shared'
 import { downloadAudio } from './youtube'
 import { uploadToYoto } from './yoto-upload'
+import { sanitizeTitle } from './sanitize-title'
+import { suggestTitle } from './suggest-title'
 
 export interface JobConfig {
   youtubeUrl: string
@@ -41,13 +43,18 @@ export async function runJob(
       throw new Error('Job cancelled after download')
     }
 
-    // Step 2: Upload to Yoto
-    const mediaUrl = await uploadToYoto(downloadResult.filePath, config.yotoToken, (step, pct) => {
-      onEvent({ step, progress: pct })
-    })
+    // AIDEV-NOTE: Run AI title suggestion in parallel with Yoto upload.
+    // The ~500ms AI call overlaps with S3 upload + transcode polling.
+    const [mediaUrl, suggested] = await Promise.all([
+      uploadToYoto(downloadResult.filePath, config.yotoToken, (step, pct) => {
+        onEvent({ step, progress: pct })
+      }),
+      suggestTitle(downloadResult.title),
+    ])
 
-    // Step 3: Emit complete event
-    onEvent({ step: 'complete', mediaUrl })
+    // Step 3: Emit complete event with both title variants
+    const title = sanitizeTitle(downloadResult.title)
+    onEvent({ step: 'complete', mediaUrl, title, suggestedTitle: suggested })
 
     return mediaUrl
   } catch (err) {

@@ -8,6 +8,10 @@ vi.mock('../yoto-upload', () => ({
   uploadToYoto: vi.fn(),
 }))
 
+vi.mock('../suggest-title', () => ({
+  suggestTitle: vi.fn().mockResolvedValue('Suggested Title'),
+}))
+
 vi.mock('node:fs/promises', () => ({
   unlink: vi.fn().mockResolvedValue(undefined),
 }))
@@ -76,7 +80,13 @@ describe('runJob', () => {
     expect(events).toContainEqual({ step: 'upload', progress: 50 })
     expect(events).toContainEqual({ step: 'upload', progress: 100 })
     expect(events).toContainEqual({ step: 'transcode', progress: 100 })
-    expect(events).toContainEqual({ step: 'complete', mediaUrl: 'yoto:#abc' })
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        step: 'complete',
+        mediaUrl: 'yoto:#abc',
+        suggestedTitle: 'Suggested Title',
+      }),
+    )
   })
 
   it('emits error event when download fails', async () => {
