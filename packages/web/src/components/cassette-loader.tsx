@@ -1,13 +1,43 @@
 import '../styles/cassette-loader.css'
 
 interface CassetteLoaderProps {
+  /** Progress 0-100. When undefined, shows indeterminate spinning animation. */
+  progress?: number
   label?: string
 }
 
-// AIDEV-NOTE: SVG cassette with two spinning reels — used during upload/download progress.
-// Coral (#E8654B) in light mode, warm off-white (#F8F5F0) in dark mode via currentColor.
-// The reels spin at different speeds to simulate tape movement.
-export function CassetteLoader({ label = 'Processing...' }: CassetteLoaderProps) {
+// AIDEV-NOTE: Spool radius math — models real tape transfer.
+// Total tape area is constant. As progress goes from 0→100, tape transfers
+// from left spool to right spool. Using area-based formula: r = sqrt(area/π).
+const HUB_RADIUS = 3
+const MIN_SPOOL = 4
+const MAX_SPOOL = 12
+
+function spoolRadii(progress: number) {
+  const p = Math.max(0, Math.min(100, progress)) / 100
+  const maxArea = MAX_SPOOL * MAX_SPOOL
+  const minArea = MIN_SPOOL * MIN_SPOOL
+  const leftArea = maxArea - p * (maxArea - minArea)
+  const rightArea = minArea + p * (maxArea - minArea)
+  return {
+    left: Math.sqrt(leftArea),
+    right: Math.sqrt(rightArea),
+  }
+}
+
+// AIDEV-NOTE: SVG cassette with progress-driven spool sizes.
+// Left spool starts full, shrinks as tape transfers to right spool.
+// Reels spin at speeds inversely proportional to their radius (like a real tape).
+export function CassetteLoader({ progress, label = 'Processing...' }: CassetteLoaderProps) {
+  const hasProgress = progress !== undefined
+  const { left: leftR, right: rightR } = hasProgress
+    ? spoolRadii(progress)
+    : { left: MAX_SPOOL, right: MIN_SPOOL }
+
+  // Spin speed: smaller spool = faster rotation (angular velocity inversely proportional to radius)
+  const leftSpeed = hasProgress ? 0.8 + (1 - leftR / MAX_SPOOL) * 1.2 : 1.5
+  const rightSpeed = hasProgress ? 0.8 + (1 - rightR / MAX_SPOOL) * 1.2 : 1.2
+
   return (
     <div className="cassette-loader" role="status" aria-label={label}>
       <svg
@@ -26,7 +56,6 @@ export function CassetteLoader({ label = 'Processing...' }: CassetteLoaderProps)
           rx="8"
           stroke="var(--color-primary)"
           strokeWidth="2.5"
-          fill="none"
         />
 
         {/* Tape window */}
@@ -38,58 +67,130 @@ export function CassetteLoader({ label = 'Processing...' }: CassetteLoaderProps)
           rx="4"
           stroke="var(--color-primary)"
           strokeWidth="1.5"
-          fill="none"
           opacity="0.4"
         />
 
-        {/* Left reel */}
-        <g className="cassette-reel" style={{ transformOrigin: '42px 34px' }}>
+        {/* Tape path — connects the two spools through the bottom of the window */}
+        <path
+          d={`M ${42 + leftR} 34 L ${78 - rightR} 34`}
+          stroke="var(--color-primary)"
+          strokeWidth="0.75"
+          opacity="0.3"
+        />
+
+        {/* Left spool — tape source */}
+        <g
+          className="cassette-reel"
+          style={{
+            transformOrigin: '42px 34px',
+            animationDuration: `${leftSpeed}s`,
+          }}
+        >
+          {/* Tape wound on spool */}
+          <circle cx="42" cy="34" r={leftR} fill="var(--color-primary)" opacity="0.12" />
+          {/* Spool outline */}
           <circle
             cx="42"
             cy="34"
-            r="10"
+            r={leftR}
             stroke="var(--color-primary)"
-            strokeWidth="2"
+            strokeWidth="1.5"
             fill="none"
           />
-          <circle cx="42" cy="34" r="3" fill="var(--color-primary)" />
+          {/* Hub */}
+          <circle cx="42" cy="34" r={HUB_RADIUS} fill="var(--color-primary)" />
           {/* Spokes */}
-          <line x1="42" y1="24" x2="42" y2="28" stroke="var(--color-primary)" strokeWidth="1.5" />
-          <line x1="42" y1="40" x2="42" y2="44" stroke="var(--color-primary)" strokeWidth="1.5" />
-          <line x1="32" y1="34" x2="36" y2="34" stroke="var(--color-primary)" strokeWidth="1.5" />
-          <line x1="48" y1="34" x2="52" y2="34" stroke="var(--color-primary)" strokeWidth="1.5" />
+          <line
+            x1="42"
+            y1={34 - leftR + 1}
+            x2="42"
+            y2={34 - HUB_RADIUS}
+            stroke="var(--color-primary)"
+            strokeWidth="1"
+          />
+          <line
+            x1="42"
+            y1={34 + HUB_RADIUS}
+            x2="42"
+            y2={34 + leftR - 1}
+            stroke="var(--color-primary)"
+            strokeWidth="1"
+          />
+          <line
+            x1={42 - leftR + 1}
+            y1="34"
+            x2={42 - HUB_RADIUS}
+            y2="34"
+            stroke="var(--color-primary)"
+            strokeWidth="1"
+          />
+          <line
+            x1={42 + HUB_RADIUS}
+            y1="34"
+            x2={42 + leftR - 1}
+            y2="34"
+            stroke="var(--color-primary)"
+            strokeWidth="1"
+          />
         </g>
 
-        {/* Right reel */}
-        <g className="cassette-reel cassette-reel--right" style={{ transformOrigin: '78px 34px' }}>
+        {/* Right spool — tape destination */}
+        <g
+          className="cassette-reel"
+          style={{
+            transformOrigin: '78px 34px',
+            animationDuration: `${rightSpeed}s`,
+          }}
+        >
+          {/* Tape wound on spool */}
+          <circle cx="78" cy="34" r={rightR} fill="var(--color-primary)" opacity="0.12" />
+          {/* Spool outline */}
           <circle
             cx="78"
             cy="34"
-            r="10"
+            r={rightR}
             stroke="var(--color-primary)"
-            strokeWidth="2"
+            strokeWidth="1.5"
             fill="none"
           />
-          <circle cx="78" cy="34" r="3" fill="var(--color-primary)" />
+          {/* Hub */}
+          <circle cx="78" cy="34" r={HUB_RADIUS} fill="var(--color-primary)" />
           {/* Spokes */}
-          <line x1="78" y1="24" x2="78" y2="28" stroke="var(--color-primary)" strokeWidth="1.5" />
-          <line x1="78" y1="40" x2="78" y2="44" stroke="var(--color-primary)" strokeWidth="1.5" />
-          <line x1="68" y1="34" x2="72" y2="34" stroke="var(--color-primary)" strokeWidth="1.5" />
-          <line x1="84" y1="34" x2="88" y2="34" stroke="var(--color-primary)" strokeWidth="1.5" />
+          <line
+            x1="78"
+            y1={34 - rightR + 1}
+            x2="78"
+            y2={34 - HUB_RADIUS}
+            stroke="var(--color-primary)"
+            strokeWidth="1"
+          />
+          <line
+            x1="78"
+            y1={34 + HUB_RADIUS}
+            x2="78"
+            y2={34 + rightR - 1}
+            stroke="var(--color-primary)"
+            strokeWidth="1"
+          />
+          <line
+            x1={78 - rightR + 1}
+            y1="34"
+            x2={78 - HUB_RADIUS}
+            y2="34"
+            stroke="var(--color-primary)"
+            strokeWidth="1"
+          />
+          <line
+            x1={78 + HUB_RADIUS}
+            y1="34"
+            x2={78 + rightR - 1}
+            y2="34"
+            stroke="var(--color-primary)"
+            strokeWidth="1"
+          />
         </g>
 
-        {/* Tape between reels */}
-        <line
-          x1="52"
-          y1="34"
-          x2="68"
-          y2="34"
-          stroke="var(--color-primary)"
-          strokeWidth="1"
-          opacity="0.5"
-        />
-
-        {/* Label strip at bottom */}
+        {/* Label strip */}
         <rect
           x="30"
           y="54"
@@ -98,32 +199,6 @@ export function CassetteLoader({ label = 'Processing...' }: CassetteLoaderProps)
           rx="2"
           fill="var(--color-primary)"
           opacity="0.15"
-        />
-
-        {/* Motion lines — dashed arcs around reels */}
-        <path
-          className="cassette-motion-line"
-          d="M 28 22 A 18 18 0 0 1 42 18"
-          stroke="var(--color-primary)"
-          strokeWidth="1"
-          strokeDasharray="2 2"
-          fill="none"
-        />
-        <path
-          className="cassette-motion-line"
-          d="M 92 22 A 18 18 0 0 0 78 18"
-          stroke="var(--color-primary)"
-          strokeWidth="1"
-          strokeDasharray="2 2"
-          fill="none"
-        />
-        <path
-          className="cassette-motion-line"
-          d="M 28 46 A 18 18 0 0 0 42 50"
-          stroke="var(--color-primary)"
-          strokeWidth="1"
-          strokeDasharray="2 2"
-          fill="none"
         />
       </svg>
       <span className="cassette-label">{label}</span>

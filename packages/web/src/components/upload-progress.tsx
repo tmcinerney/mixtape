@@ -25,9 +25,16 @@ export function UploadProgress({ progress, title, onCancel }: UploadProgressProp
   const percentage =
     progress && 'progress' in progress ? (progress as { progress: number }).progress : null
 
+  // AIDEV-NOTE: Overall progress for cassette spool animation.
+  // 3 steps × 100% each = 0-300 range, normalized to 0-100.
+  const overallProgress =
+    activeIdx >= 0
+      ? Math.round(((activeIdx * 100 + (percentage ?? 0)) / (STEPS.length * 100)) * 100)
+      : 0
+
   return (
     <div className="upload-progress">
-      <CassetteLoader />
+      <CassetteLoader progress={overallProgress} />
       <p className="upload-progress-title">{title}</p>
       <div className="upload-progress-steps" role="group" aria-label="Upload progress">
         {STEPS.map((step, idx) => {
