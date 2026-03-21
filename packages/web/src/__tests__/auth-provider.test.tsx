@@ -43,7 +43,7 @@ describe('AuthProvider', () => {
     expect(mockAuth0Provider).toHaveBeenCalledWith(
       expect.objectContaining({
         domain: 'login.yotoplay.com',
-        clientId: 'dnYtT5nCGInP8UXSWnkGa5uTgj3RV0ba',
+        clientId: 'h38kpMcg6VSwhl42BaVZdeEPguh9LPBd',
       }),
     )
   })
