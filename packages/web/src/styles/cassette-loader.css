@@ -1,0 +1,60 @@
+/* Cassette tape loading animation — spinning reels */
+.cassette-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.cassette-svg {
+  width: 120px;
+  height: 80px;
+}
+
+/* AIDEV-NOTE: Reel spin animation — continuous rotation for loading state */
+@keyframes spin-reel {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cassette-reel {
+  transform-origin: center;
+  animation: spin-reel 1.5s linear infinite;
+}
+
+.cassette-reel--right {
+  animation-duration: 1.2s;
+}
+
+/* AIDEV-NOTE: Motion lines pulse to suggest tape movement */
+@keyframes pulse-line {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.cassette-motion-line {
+  animation: pulse-line 1s ease-in-out infinite;
+}
+
+.cassette-motion-line:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.cassette-motion-line:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.cassette-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}

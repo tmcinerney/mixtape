@@ -1,4 +1,5 @@
 import type { JobProgress } from '@mixtape/shared'
+import { CassetteLoader } from './cassette-loader'
 import '../styles/upload-progress.css'
 
 const STEPS = ['download', 'convert', 'upload'] as const
@@ -26,6 +27,7 @@ export function UploadProgress({ progress, title, onCancel }: UploadProgressProp
 
   return (
     <div className="upload-progress">
+      <CassetteLoader />
       <p className="upload-progress-title">{title}</p>
       <div className="upload-progress-steps" role="group" aria-label="Upload progress">
         {STEPS.map((step, idx) => {
