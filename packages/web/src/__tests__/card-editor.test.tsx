@@ -132,18 +132,14 @@ describe('CardEditor', () => {
     expect(screen.getByDisplayValue('New Title')).toBeInTheDocument()
   })
 
-  it('reorder moves track up', async () => {
+  it('renders drag handles for reordering', async () => {
     mockGetCard.mockResolvedValue(mockCard)
     renderEditor()
 
     await screen.findByDisplayValue('Chapter One')
 
-    const moveUpButtons = screen.getAllByRole('button', { name: /move up/i })
-    await userEvent.click(moveUpButtons[0]!)
-
-    const trackInputs = screen.getAllByRole('textbox', { name: /track title/i })
-    expect(trackInputs[0]!).toHaveValue('Chapter Two')
-    expect(trackInputs[1]!).toHaveValue('Chapter One')
+    const dragHandles = screen.getAllByRole('button', { name: /drag to reorder/i })
+    expect(dragHandles).toHaveLength(3)
   })
 
   it('save calls updateCard with modified data', async () => {

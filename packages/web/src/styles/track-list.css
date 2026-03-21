@@ -21,23 +21,23 @@
   background-color: var(--color-stripe);
 }
 
-.track-list-reorder {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.track-list-reorder-btn {
-  font-size: var(--font-size-xs);
+.track-list-drag-handle {
+  cursor: grab;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
   padding: 2px 4px;
   border-radius: var(--radius-sm);
-  color: var(--color-text-secondary);
   line-height: 1;
+  touch-action: none;
 }
 
-.track-list-reorder-btn:hover {
-  background-color: var(--color-surface);
+.track-list-drag-handle:hover {
   color: var(--color-text-primary);
+  background-color: var(--color-surface);
+}
+
+.track-list-drag-handle:active {
+  cursor: grabbing;
 }
 
 .track-list-number {
