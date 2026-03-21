@@ -1,12 +1,21 @@
 import { useCallback, useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
 
-interface Chapter {
-  title: string
-  format: 'opus'
-  channels: 'stereo'
-  type: 'audio'
+interface Track {
   url: string
+  format: string
+  channels: string
+  type: string
+  overlayLabel?: string
+  [key: string]: unknown
+}
+
+interface Chapter {
+  key: string
+  title?: string
+  tracks: Track[]
+  overlayLabel?: string
+  [key: string]: unknown
 }
 
 interface AddTrackParams {
@@ -15,12 +24,17 @@ interface AddTrackParams {
   title: string
 }
 
-// AIDEV-NOTE: required defaults for Yoto card content updates
-const CARD_DEFAULTS = {
-  activity: 'none' as const,
-  restricted: false,
-  version: 2,
-  config: { onlineOnly: true },
+// AIDEV-NOTE: Card defaults from yoto-mcp/src/tools/content.ts — matching
+// the official MYO portal. These are merged onto existing card content.
+const MYO_CARD_DEFAULTS = {
+  activity: 'yoto_Player',
+  restricted: true,
+  version: '1',
+}
+
+const MYO_CONFIG_DEFAULTS = {
+  resumeTimeout: 2592000,
+  onlineOnly: false,
 }
 
 export function useAddTrack() {
@@ -36,36 +50,52 @@ export function useAddTrack() {
       setError(null)
 
       try {
-        // AIDEV-NOTE: SDK getCard returns YotoJson { content, metadata }
-        const cardData = await sdk.content.getCard(cardId)
-        const existingChapters = (cardData.content?.chapters ?? {}) as Record<string, Chapter>
+        // AIDEV-NOTE: Fetch existing card to merge onto — prevents data loss.
+        // SDK returns { content, metadata, cardId, ... } as YotoJson.
+        const existing = await sdk.content.getCard(cardId)
+        const existingContent = (existing.content ?? {}) as Record<string, unknown>
+        const existingChapters = (existingContent.chapters ?? []) as Chapter[]
+        const existingConfig = (existingContent.config ?? {}) as Record<string, unknown>
 
-        // AIDEV-NOTE: next key is zero-padded number after highest existing key
-        const existingKeys = Object.keys(existingChapters).map(Number)
-        const nextKey = existingKeys.length > 0 ? Math.max(...existingKeys) + 1 : 0
-        const paddedKey = String(nextKey).padStart(2, '0')
+        // AIDEV-NOTE: chapters is an array. Each chapter has a key (zero-padded),
+        // tracks array, and overlayLabel. This matches yoto-mcp's format.
+        const nextIndex = existingChapters.length
+        const paddedKey = String(nextIndex).padStart(2, '0')
 
         const newChapter: Chapter = {
+          key: paddedKey,
           title,
-          format: 'opus',
-          channels: 'stereo',
-          type: 'audio',
-          url: mediaUrl,
+          overlayLabel: String(nextIndex + 1),
+          tracks: [
+            {
+              url: mediaUrl,
+              format: 'opus',
+              channels: 'stereo',
+              type: 'audio',
+              overlayLabel: String(nextIndex + 1),
+            },
+          ],
         }
 
-        const updatedChapters = {
-          ...existingChapters,
-          [paddedKey]: newChapter,
-        }
+        const updatedChapters = [...existingChapters, newChapter]
 
-        // AIDEV-NOTE: updateCard takes YotoJson { content, metadata }
-        await sdk.content.updateCard({
+        // AIDEV-NOTE: updateCard needs cardId in payload for API to update (not create).
+        // Merge defaults onto existing content to preserve fields we don't own.
+        // Cast through unknown because YotoJson type doesn't include cardId.
+        const payload = {
+          ...existing,
+          cardId,
           content: {
-            ...CARD_DEFAULTS,
+            ...MYO_CARD_DEFAULTS,
+            ...existingContent,
+            config: { ...MYO_CONFIG_DEFAULTS, ...existingConfig },
             chapters: updatedChapters,
           },
-          metadata: cardData.metadata ?? {},
-        })
+          metadata: existing.metadata ?? {},
+        }
+        await sdk.content.updateCard(
+          payload as unknown as Parameters<typeof sdk.content.updateCard>[0],
+        )
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error'
         setError(message)
