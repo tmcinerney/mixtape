@@ -4,6 +4,7 @@ import { YotoProvider } from './auth/yoto-provider'
 import { useTheme } from './hooks/use-theme'
 import { routes } from './routes'
 import './styles/header.css'
+import './styles/footer.css'
 
 function Header() {
   const { theme, toggleTheme } = useTheme()
@@ -57,6 +58,13 @@ export function App() {
       <main className="app-main">
         {isAuthenticated ? <YotoProvider>{routeElement}</YotoProvider> : routeElement}
       </main>
+      <footer className="footer">
+        &copy; mixtape
+        <span className="footer-separator">&middot;</span>
+        Help
+        <span className="footer-separator">&middot;</span>
+        Log out
+      </footer>
     </>
   )
 }

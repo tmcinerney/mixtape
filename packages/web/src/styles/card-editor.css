@@ -53,6 +53,10 @@
   margin-top: var(--space-lg);
 }
 
+.card-editor-change-icon {
+  margin-top: var(--space-sm);
+}
+
 /* Auth prompt */
 .card-editor-auth {
   text-align: center;

@@ -1,0 +1,12 @@
+/* Footer — minimal, muted text per design spec */
+.footer {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg) var(--space-lg);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.footer-separator {
+  margin: 0 var(--space-sm);
+  opacity: 0.4;
+}

@@ -186,9 +186,7 @@ export function CardEditor() {
           aria-label="Card title"
           className="card-editor-title-input"
         />
-        <button className="btn-secondary" style={{ marginTop: 'var(--space-sm)' }}>
-          Change icon
-        </button>
+        <button className="btn-secondary card-editor-change-icon">Change icon</button>
       </div>
 
       {/* Right column: track list */}
