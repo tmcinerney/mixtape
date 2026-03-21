@@ -2,8 +2,19 @@ import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useYoto } from '../auth/yoto-provider'
 import { TrackList, type Track } from '../components/track-list'
+import type { YotoJson } from '@yotoplay/yoto-sdk'
 
-// AIDEV-NOTE: Mirrors Yoto card JSON structure for type safety in the editor
+// AIDEV-NOTE: The SDK's YotoJson type is loosely typed (Record<string, unknown>).
+// These interfaces represent the actual runtime shape of card data from the API.
+// We cast through YotoJson at the SDK boundary.
+interface ChapterData {
+  title: string
+  format: string
+  channels: string
+  type: string
+  url: string
+}
+
 interface CardContent {
   activity: string
   editTracksDisabled: boolean
@@ -13,15 +24,7 @@ interface CardContent {
   restricted: boolean
 }
 
-interface ChapterData {
-  title: string
-  format: string
-  channels: string
-  type: string
-  url: string
-}
-
-interface CardPayload {
+interface CardData {
   card: {
     cardId: string
     title: string
@@ -61,7 +64,7 @@ export function CardEditor() {
   const { cardId } = useParams<{ cardId: string }>()
   const navigate = useNavigate()
   const { sdk, isReady } = useYoto()
-  const [card, setCard] = useState<CardPayload | null>(null)
+  const [card, setCard] = useState<CardData | null>(null)
   const [title, setTitle] = useState('')
   const [tracks, setTracks] = useState<Track[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,11 +76,13 @@ export function CardEditor() {
     let cancelled = false
     setLoading(true)
 
-    sdk.content.getCard(cardId).then((result: CardPayload) => {
+    sdk.content.getCard(cardId).then((result) => {
       if (!cancelled) {
-        setCard(result)
-        setTitle(result.card.title)
-        setTracks(chaptersToTracks(result.card.content.chapters))
+        // AIDEV-NOTE: cast from loosely-typed YotoJson to our internal CardData
+        const data = result as unknown as CardData
+        setCard(data)
+        setTitle(data.card.title)
+        setTracks(chaptersToTracks(data.card.content.chapters))
         setLoading(false)
       }
     })
@@ -94,7 +99,6 @@ export function CardEditor() {
   const handleDelete = useCallback((index: number) => {
     setTracks((prev) => {
       const next = prev.filter((_, i) => i !== index)
-      // re-key after deletion
       return next.map((t, i) => ({ ...t, key: String(i).padStart(2, '0') }))
     })
   }, [])
@@ -103,7 +107,7 @@ export function CardEditor() {
     if (!sdk || !card) return
 
     setSaving(true)
-    const updated: CardPayload = {
+    const updated: CardData = {
       card: {
         ...card.card,
         title,
@@ -114,7 +118,7 @@ export function CardEditor() {
       },
     }
 
-    await sdk.content.updateCard(updated)
+    await sdk.content.updateCard(updated as unknown as YotoJson)
     setSaving(false)
     navigate('/')
   }

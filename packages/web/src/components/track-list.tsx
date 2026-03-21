@@ -21,7 +21,9 @@ export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackL
   const moveUp = (index: number) => {
     if (index === 0) return
     const next = [...tracks]
-    ;[next[index - 1], next[index]] = [next[index], next[index - 1]]
+    const temp = next[index - 1]!
+    next[index - 1] = next[index]!
+    next[index] = temp
     // AIDEV-NOTE: re-key chapters with zero-padded two-digit keys after reorder
     onReorder(rekey(next))
   }
@@ -29,7 +31,9 @@ export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackL
   const moveDown = (index: number) => {
     if (index === tracks.length - 1) return
     const next = [...tracks]
-    ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
+    const temp = next[index]!
+    next[index] = next[index + 1]!
+    next[index + 1] = temp
     onReorder(rekey(next))
   }
 

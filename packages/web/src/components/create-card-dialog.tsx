@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
-import { IconPicker, type YotoIcon } from './icon-picker'
+import { IconPicker } from './icon-picker'
+import type { DisplayIcon, YotoJson } from '@yotoplay/yoto-sdk'
 
 interface CreateCardDialogProps {
   open: boolean
@@ -8,12 +9,14 @@ interface CreateCardDialogProps {
   onCreated: () => void
 }
 
-// AIDEV-NOTE: Creates a new card via SDK with sensible defaults for device playback.
-// The card starts with no chapters — user adds tracks later via the card editor.
+// AIDEV-NOTE: Creates a new card via SDK updateCard with sensible defaults for
+// device playback. The card starts with no chapters — user adds tracks later via
+// the card editor. The SDK doesn't have a dedicated createCard method, so we use
+// updateCard which performs an upsert when no cardId is present.
 export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogProps) {
   const { sdk } = useYoto()
   const [title, setTitle] = useState('')
-  const [icon, setIcon] = useState<YotoIcon | null>(null)
+  const [icon, setIcon] = useState<DisplayIcon | null>(null)
   const [showIconPicker, setShowIconPicker] = useState(false)
   const [creating, setCreating] = useState(false)
 
@@ -23,23 +26,24 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
     if (!sdk || !title.trim()) return
 
     setCreating(true)
-    await sdk.content.createCard({
-      card: {
-        title: title.trim(),
-        metadata: {
-          icon: icon?.url ?? '',
-          color: '#6366F1',
-        },
-        content: {
-          activity: 'none',
-          editTracksDisabled: false,
-          chapters: {},
-          config: { onlineOnly: true },
-          version: 2,
-          restricted: false,
-        },
+
+    const newCard: YotoJson = {
+      content: {
+        activity: 'none',
+        editTracksDisabled: false,
+        chapters: {},
+        config: { onlineOnly: true },
+        version: 2,
+        restricted: false,
       },
-    })
+      metadata: {
+        title: title.trim(),
+        icon: icon?.url ?? '',
+        color: '#6366F1',
+      },
+    }
+
+    await sdk.content.updateCard(newCard)
 
     setTitle('')
     setIcon(null)
@@ -87,7 +91,7 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
 
         <div style={{ marginBottom: '0.5rem' }}>
           <button onClick={() => setShowIconPicker(!showIconPicker)}>
-            {icon ? `Icon: ${icon.name}` : 'Choose icon'}
+            {icon ? `Icon: ${icon.title}` : 'Choose icon'}
           </button>
           {showIconPicker && (
             <div style={{ marginTop: '0.5rem' }}>

@@ -18,22 +18,17 @@ vi.mock('@auth0/auth0-react', () => ({
 
 import { CardGrid } from '../components/card-grid'
 
+// AIDEV-NOTE: Matches SDK UserCard shape — flat object, no nested card wrapper
 const mockCards = [
   {
-    card: {
-      cardId: 'card-1',
-      title: 'Bedtime Stories',
-      metadata: { icon: 'https://icons.yoto.com/moon.png', color: '#3B82F6' },
-      content: { chapters: {} },
-    },
+    cardId: 'card-1',
+    title: 'Bedtime Stories',
+    cover: { imageS: 'https://images.yoto.com/moon.png' },
   },
   {
-    card: {
-      cardId: 'card-2',
-      title: 'Morning Songs',
-      metadata: { icon: 'https://icons.yoto.com/sun.png', color: '#F59E0B' },
-      content: { chapters: {} },
-    },
+    cardId: 'card-2',
+    title: 'Morning Songs',
+    cover: { imageS: 'https://images.yoto.com/sun.png' },
   },
 ]
 

@@ -2,25 +2,18 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useYoto } from '../auth/yoto-provider'
-
-// AIDEV-NOTE: Card type mirrors the Yoto SDK response shape
-interface CardData {
-  card: {
-    cardId: string
-    title: string
-    metadata: { icon: string; color: string }
-    content: { chapters: Record<string, unknown> }
-  }
-}
+import type { UserCard } from '@yotoplay/yoto-sdk'
 
 interface CardGridProps {
   onAddPlaylist?: () => void
 }
 
+// AIDEV-NOTE: getMyCards() returns UserCard[] — a summary type with cardId, title, cover.
+// It does NOT include metadata/content. Full card data is loaded in the editor via getCard().
 export function CardGrid({ onAddPlaylist }: CardGridProps) {
   const { isAuthenticated, loginWithRedirect } = useAuth0()
   const { sdk, isReady } = useYoto()
-  const [cards, setCards] = useState<CardData[]>([])
+  const [cards, setCards] = useState<UserCard[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -29,7 +22,7 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
     let cancelled = false
     setLoading(true)
 
-    sdk.content.getMyCards().then((result: CardData[]) => {
+    sdk.content.getMyCards().then((result) => {
       if (!cancelled) {
         setCards(result)
         setLoading(false)
@@ -62,7 +55,7 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
         gap: '1rem',
       }}
     >
-      {cards.map(({ card }) => (
+      {cards.map((card) => (
         <Link
           key={card.cardId}
           to={`/cards/${card.cardId}`}
@@ -73,16 +66,16 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
             alignItems: 'center',
             justifyContent: 'center',
             aspectRatio: '2 / 3',
-            backgroundColor: card.metadata.color,
+            backgroundColor: '#6366F1',
             borderRadius: '0.5rem',
             padding: '1rem',
             textDecoration: 'none',
             color: 'white',
           }}
         >
-          {card.metadata.icon && (
+          {card.cover?.imageS && (
             <img
-              src={card.metadata.icon}
+              src={card.cover.imageS}
               alt=""
               style={{ width: 48, height: 48, marginBottom: '0.5rem' }}
             />

@@ -11,12 +11,58 @@ vi.mock('../auth/yoto-provider', () => ({
 
 import { IconPicker, _resetIconCache } from '../components/icon-picker'
 
+// AIDEV-NOTE: Matches SDK DisplayIcon shape — uses title (not name), no category
 const mockIcons = [
-  { name: 'Moon', url: 'https://icons.yoto.com/moon.png', category: 'nature' },
-  { name: 'Sun', url: 'https://icons.yoto.com/sun.png', category: 'nature' },
-  { name: 'Guitar', url: 'https://icons.yoto.com/guitar.png', category: 'music' },
-  { name: 'Piano', url: 'https://icons.yoto.com/piano.png', category: 'music' },
-  { name: 'Rocket', url: 'https://icons.yoto.com/rocket.png', category: 'space' },
+  {
+    title: 'Moon',
+    url: 'https://icons.yoto.com/moon.png',
+    mediaId: 'm1',
+    displayIconId: 'd1',
+    userId: 'u1',
+    createdAt: '',
+    public: true,
+    publicTags: [],
+  },
+  {
+    title: 'Sun',
+    url: 'https://icons.yoto.com/sun.png',
+    mediaId: 'm2',
+    displayIconId: 'd2',
+    userId: 'u1',
+    createdAt: '',
+    public: true,
+    publicTags: [],
+  },
+  {
+    title: 'Guitar',
+    url: 'https://icons.yoto.com/guitar.png',
+    mediaId: 'm3',
+    displayIconId: 'd3',
+    userId: 'u1',
+    createdAt: '',
+    public: true,
+    publicTags: [],
+  },
+  {
+    title: 'Piano',
+    url: 'https://icons.yoto.com/piano.png',
+    mediaId: 'm4',
+    displayIconId: 'd4',
+    userId: 'u1',
+    createdAt: '',
+    public: true,
+    publicTags: [],
+  },
+  {
+    title: 'Rocket',
+    url: 'https://icons.yoto.com/rocket.png',
+    mediaId: 'm5',
+    displayIconId: 'd5',
+    userId: 'u1',
+    createdAt: '',
+    public: true,
+    publicTags: [],
+  },
 ]
 
 describe('IconPicker', () => {

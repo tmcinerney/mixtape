@@ -116,12 +116,12 @@ describe('CardEditor', () => {
     // AIDEV-NOTE: find move-up buttons for Chapter Two (index 1)
     const moveUpButtons = screen.getAllByRole('button', { name: /move up/i })
     // The first move-up button corresponds to Chapter Two (Chapter One has no move up)
-    await userEvent.click(moveUpButtons[0])
+    await userEvent.click(moveUpButtons[0]!)
 
     // After moving Chapter Two up, the first track should now be Chapter Two
     const trackInputs = screen.getAllByRole('textbox', { name: /track title/i })
-    expect(trackInputs[0]).toHaveValue('Chapter Two')
-    expect(trackInputs[1]).toHaveValue('Chapter One')
+    expect(trackInputs[0]!).toHaveValue('Chapter Two')
+    expect(trackInputs[1]!).toHaveValue('Chapter One')
   })
 
   it('save calls updateCard with modified data', async () => {
@@ -153,7 +153,7 @@ describe('CardEditor', () => {
     await screen.findByDisplayValue('Chapter One')
 
     const deleteButtons = screen.getAllByRole('button', { name: /delete track/i })
-    await userEvent.click(deleteButtons[0])
+    await userEvent.click(deleteButtons[0]!)
 
     expect(screen.queryByDisplayValue('Chapter One')).not.toBeInTheDocument()
     expect(screen.getByDisplayValue('Chapter Two')).toBeInTheDocument()
