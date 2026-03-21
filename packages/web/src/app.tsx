@@ -1,4 +1,4 @@
-import { useRoutes } from 'react-router-dom'
+import { useRoutes, Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import { YotoProvider } from './auth/yoto-provider'
 import { useTheme } from './hooks/use-theme'
@@ -12,13 +12,13 @@ function Header() {
 
   return (
     <header className="header">
-      <div className="header-logo">
+      <Link to="/" className="header-logo">
         {/* AIDEV-NOTE: cassette reel icon — O—O */}
         <span aria-hidden="true" className="header-logo-icon">
           O—O
         </span>
         <span className="header-logo-text">mixtape</span>
-      </div>
+      </Link>
       <div className="header-actions">
         <button
           className="header-theme-toggle"
