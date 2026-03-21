@@ -11,7 +11,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <Auth0Provider
       domain="login.yotoplay.com"
-      clientId="dnYtT5nCGInP8UXSWnkGa5uTgj3RV0ba"
+      clientId="h38kpMcg6VSwhl42BaVZdeEPguh9LPBd"
       authorizationParams={{
         audience: 'https://api.yotoplay.com',
         scope: 'offline_access openid profile',

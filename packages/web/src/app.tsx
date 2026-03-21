@@ -1,6 +1,5 @@
-import { useRoutes, useLocation } from 'react-router-dom'
+import { useRoutes } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
-import { ProtectedRoute } from './auth/auth-provider'
 import { YotoProvider } from './auth/yoto-provider'
 import { useTheme } from './hooks/use-theme'
 import { routes } from './routes'
@@ -51,23 +50,19 @@ function Header() {
   )
 }
 
+// AIDEV-NOTE: Landing page is public. Auth triggers when user tries to
+// start a job or manage cards. YotoProvider only renders when authenticated
+// so SDK calls don't fire without a token.
 export function App() {
-  const location = useLocation()
+  const { isAuthenticated } = useAuth0()
   const routeElement = useRoutes(routes)
 
-  // AIDEV-NOTE: /callback is unprotected — Auth0 redirect handler
-  const isCallbackRoute = location.pathname === '/callback'
-
-  if (isCallbackRoute) {
-    return <>{routeElement}</>
-  }
-
   return (
-    <ProtectedRoute>
-      <YotoProvider>
-        <Header />
-        <main style={{ padding: '1rem' }}>{routeElement}</main>
-      </YotoProvider>
-    </ProtectedRoute>
+    <>
+      <Header />
+      <main style={{ padding: '1rem' }}>
+        {isAuthenticated ? <YotoProvider>{routeElement}</YotoProvider> : routeElement}
+      </main>
+    </>
   )
 }
