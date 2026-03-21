@@ -14,47 +14,71 @@ vi.mock('../auth/yoto-provider', () => ({
 vi.mock('@auth0/auth0-react', () => ({
   useAuth0: () => ({
     isAuthenticated: true,
+    isLoading: false,
     loginWithRedirect: vi.fn(),
   }),
 }))
 
 import { CardEditor } from '../pages/card-editor'
 
+// AIDEV-NOTE: Mock matches the real SDK getCard() response — flat structure
+// with chapters as an array of { key, title, tracks: [{ trackUrl, ... }] }
 const mockCard = {
-  card: {
-    cardId: 'card-1',
-    title: 'Bedtime Stories',
-    metadata: { icon: 'https://icons.yoto.com/moon.png', color: '#3B82F6' },
-    content: {
-      activity: 'none',
-      editTracksDisabled: false,
-      chapters: {
-        '00': {
-          title: 'Chapter One',
-          format: 'opus',
-          channels: 'stereo',
-          type: 'audio',
-          url: 'https://audio.yoto.com/ch1.opus',
-        },
-        '01': {
-          title: 'Chapter Two',
-          format: 'opus',
-          channels: 'stereo',
-          type: 'audio',
-          url: 'https://audio.yoto.com/ch2.opus',
-        },
-        '02': {
-          title: 'Chapter Three',
-          format: 'opus',
-          channels: 'stereo',
-          type: 'audio',
-          url: 'https://audio.yoto.com/ch3.opus',
-        },
+  cardId: 'card-1',
+  title: 'Bedtime Stories',
+  metadata: { icon: 'https://icons.yoto.com/moon.png', color: '#3B82F6' },
+  content: {
+    activity: 'yoto_Player',
+    chapters: [
+      {
+        key: '00',
+        title: 'Chapter One',
+        overlayLabel: '1',
+        tracks: [
+          {
+            key: '01',
+            trackUrl: 'https://audio.yoto.com/ch1.opus',
+            format: 'opus',
+            channels: 'stereo',
+            type: 'audio',
+            title: 'Chapter One',
+          },
+        ],
       },
-      config: { onlineOnly: true },
-      version: 2,
-      restricted: false,
-    },
+      {
+        key: '01',
+        title: 'Chapter Two',
+        overlayLabel: '2',
+        tracks: [
+          {
+            key: '01',
+            trackUrl: 'https://audio.yoto.com/ch2.opus',
+            format: 'opus',
+            channels: 'stereo',
+            type: 'audio',
+            title: 'Chapter Two',
+          },
+        ],
+      },
+      {
+        key: '02',
+        title: 'Chapter Three',
+        overlayLabel: '3',
+        tracks: [
+          {
+            key: '01',
+            trackUrl: 'https://audio.yoto.com/ch3.opus',
+            format: 'opus',
+            channels: 'stereo',
+            type: 'audio',
+            title: 'Chapter Three',
+          },
+        ],
+      },
+    ],
+    config: { onlineOnly: false },
+    version: '1',
+    restricted: true,
   },
 }
 
@@ -63,6 +87,7 @@ function renderEditor() {
     <MemoryRouter initialEntries={['/cards/card-1']}>
       <Routes>
         <Route path="/cards/:cardId" element={<CardEditor />} />
+        <Route path="/" element={<div>Home</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -113,12 +138,9 @@ describe('CardEditor', () => {
 
     await screen.findByDisplayValue('Chapter One')
 
-    // AIDEV-NOTE: find move-up buttons for Chapter Two (index 1)
     const moveUpButtons = screen.getAllByRole('button', { name: /move up/i })
-    // The first move-up button corresponds to Chapter Two (Chapter One has no move up)
     await userEvent.click(moveUpButtons[0]!)
 
-    // After moving Chapter Two up, the first track should now be Chapter Two
     const trackInputs = screen.getAllByRole('textbox', { name: /track title/i })
     expect(trackInputs[0]!).toHaveValue('Chapter Two')
     expect(trackInputs[1]!).toHaveValue('Chapter One')
@@ -138,9 +160,8 @@ describe('CardEditor', () => {
     await waitFor(() => {
       expect(mockUpdateCard).toHaveBeenCalledWith(
         expect.objectContaining({
-          card: expect.objectContaining({
-            title: 'Updated Title',
-          }),
+          cardId: 'card-1',
+          title: 'Updated Title',
         }),
       )
     })
