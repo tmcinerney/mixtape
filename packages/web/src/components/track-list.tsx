@@ -1,3 +1,5 @@
+import '../styles/track-list.css'
+
 // AIDEV-NOTE: Each "track" in the UI represents a Yoto chapter.
 // A chapter has a key, title, and a tracks array (usually one track per chapter).
 // The first track's trackUrl is what the device plays.
@@ -41,23 +43,13 @@ export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackL
   return (
     <div role="list" aria-label="Track list">
       {tracks.map((track, i) => (
-        <div
-          key={track.key}
-          role="listitem"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 0',
-            borderBottom: '1px solid #e5e7eb',
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div key={track.key} role="listitem" className="track-list-item">
+          <div className="track-list-reorder">
             {i > 0 ? (
               <button
                 onClick={() => moveUp(i)}
                 aria-label="Move up"
-                style={{ fontSize: '0.75rem' }}
+                className="track-list-reorder-btn"
               >
                 ▲
               </button>
@@ -66,21 +58,25 @@ export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackL
               <button
                 onClick={() => moveDown(i)}
                 aria-label="Move down"
-                style={{ fontSize: '0.75rem' }}
+                className="track-list-reorder-btn"
               >
                 ▼
               </button>
             ) : null}
           </div>
-          <span style={{ minWidth: '2ch', textAlign: 'right', opacity: 0.5 }}>{i + 1}</span>
+          <span className="track-list-number">{i + 1}</span>
           <input
             type="text"
             value={track.title}
             onChange={(e) => onTitleChange(i, e.target.value)}
             aria-label="Track title"
-            style={{ flex: 1 }}
+            className="track-list-title-input"
           />
-          <button onClick={() => onDelete(i)} aria-label="Delete track">
+          <button
+            onClick={() => onDelete(i)}
+            aria-label="Delete track"
+            className="track-list-delete-btn"
+          >
             ✕
           </button>
         </div>

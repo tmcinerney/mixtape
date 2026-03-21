@@ -1,0 +1,65 @@
+/* AIDEV-NOTE: Track rows — alternating background, no borders per design spec */
+.track-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--duration-normal) var(--easing-smooth);
+}
+
+/* Alternating background instead of border lines */
+.track-list-item:nth-child(even) {
+  background-color: var(--color-surface);
+}
+
+.track-list-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.track-list-reorder-btn {
+  font-size: var(--font-size-xs);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  line-height: 1;
+}
+
+.track-list-reorder-btn:hover {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.track-list-number {
+  min-width: 2ch;
+  text-align: right;
+  opacity: 0.5;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.track-list-title-input {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  background-color: transparent;
+  font-size: var(--font-size-sm);
+}
+
+.track-list-title-input:focus {
+  background-color: var(--color-surface);
+}
+
+.track-list-delete-btn {
+  font-size: var(--font-size-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+}
+
+.track-list-delete-btn:hover {
+  color: var(--color-error);
+  background-color: var(--color-surface);
+}

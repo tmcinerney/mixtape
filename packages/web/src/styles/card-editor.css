@@ -1,0 +1,60 @@
+/* AIDEV-NOTE: Card editor — two-column layout per design spec */
+.card-editor {
+  display: flex;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+/* Left column: card artwork preview */
+.card-editor-preview {
+  flex: 0 0 220px;
+}
+
+.card-editor-artwork {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.card-editor-artwork-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: var(--space-sm);
+  object-fit: contain;
+}
+
+.card-editor-title-input {
+  width: 100%;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+}
+
+/* Right column: track list */
+.card-editor-tracks {
+  flex: 1;
+  min-width: 300px;
+}
+
+.card-editor-tracks h2 {
+  margin-bottom: var(--space-md);
+}
+
+.card-editor-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+/* Auth prompt */
+.card-editor-auth {
+  text-align: center;
+  padding: var(--space-2xl);
+}

@@ -8,6 +8,7 @@ import { UploadProgress } from '../components/upload-progress'
 import { UploadConfirmation } from '../components/upload-confirmation'
 import { CardGrid } from '../components/card-grid'
 import { CreateCardDialog } from '../components/create-card-dialog'
+import '../styles/landing.css'
 
 export function LandingPage() {
   const { addTrack } = useAddTrack()
@@ -27,43 +28,52 @@ export function LandingPage() {
   const flow = useUploadFlow({ onTrackReady: handleTrackReady })
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>mixtape</h1>
+    <div className="landing">
+      <div className="landing-hero">
+        <h1 className="landing-heading">
+          Make <span className="accent">mixtapes</span> for your{' '}
+          <span className="accent">Yoto cards</span>.
+        </h1>
 
-      {flow.state === 'idle' ? <UrlInput onSubmit={flow.submitUrl} /> : null}
+        {flow.state === 'idle' ? <UrlInput onSubmit={flow.submitUrl} /> : null}
 
-      {flow.state === 'selecting-card' ? (
-        <CardSelector onSelect={flow.selectCard} onCancel={flow.reset} />
-      ) : null}
+        {flow.state === 'selecting-card' ? (
+          <CardSelector onSelect={flow.selectCard} onCancel={flow.reset} />
+        ) : null}
 
-      {flow.state === 'uploading' ? (
-        <UploadProgress
-          progress={flow.progress}
-          title={flow.youtubeUrl ?? 'Processing...'}
-          onCancel={flow.cancel}
-        />
-      ) : null}
+        {flow.state === 'uploading' ? (
+          <UploadProgress
+            progress={flow.progress}
+            title={flow.youtubeUrl ?? 'Processing...'}
+            onCancel={flow.cancel}
+          />
+        ) : null}
 
-      {flow.state === 'adding-track' ? <p>Adding track to card...</p> : null}
+        {flow.state === 'adding-track' ? (
+          <p className="landing-adding">Adding track to card...</p>
+        ) : null}
 
-      {flow.state === 'complete' ? (
-        <UploadConfirmation
-          cardName={flow.cardId ?? 'Card'}
-          trackTitle={flow.youtubeUrl ?? 'Track'}
-          cardId={flow.cardId ?? ''}
-          onViewCard={(id) => navigate(`/cards/${id}`)}
-          onAddAnother={flow.reset}
-        />
-      ) : null}
+        {flow.state === 'complete' ? (
+          <UploadConfirmation
+            cardName={flow.cardId ?? 'Card'}
+            trackTitle={flow.youtubeUrl ?? 'Track'}
+            cardId={flow.cardId ?? ''}
+            onViewCard={(id) => navigate(`/cards/${id}`)}
+            onAddAnother={flow.reset}
+          />
+        ) : null}
 
-      {flow.state === 'error' ? (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p style={{ color: 'red' }}>Error: {flow.error}</p>
-          <button onClick={flow.reset}>Try Again</button>
-        </div>
-      ) : null}
+        {flow.state === 'error' ? (
+          <div className="landing-error">
+            <p>Error: {flow.error}</p>
+            <button className="btn-secondary" onClick={flow.reset}>
+              Try Again
+            </button>
+          </div>
+        ) : null}
+      </div>
 
-      <div style={{ marginTop: '3rem' }}>
+      <div className="landing-cards-section">
         <CardGrid onAddPlaylist={() => setShowCreate(true)} />
         <CreateCardDialog
           open={showCreate}

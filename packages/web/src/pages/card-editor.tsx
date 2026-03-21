@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useYoto } from '../auth/yoto-provider'
 import { TrackList, type Track } from '../components/track-list'
+import '../styles/card-editor.css'
 
 // AIDEV-NOTE: Actual shape returned by sdk.content.getCard() — the SDK
 // unwraps the { card: ... } wrapper from the raw API response.
@@ -73,25 +74,6 @@ function tracksToChapters(tracks: Track[], originalChapters: Chapter[]): Chapter
     }
   })
 }
-
-const layoutStyle: React.CSSProperties = { display: 'flex', gap: '2rem', flexWrap: 'wrap' }
-const leftColumnStyle: React.CSSProperties = { flex: '0 0 200px' }
-
-const previewBaseStyle: React.CSSProperties = {
-  aspectRatio: '2 / 3',
-  borderRadius: '0.5rem',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '1rem',
-  marginBottom: '1rem',
-}
-
-const iconStyle: React.CSSProperties = { width: 64, height: 64, marginBottom: '0.5rem' }
-const titleInputStyle: React.CSSProperties = { width: '100%', fontSize: '1.1rem', fontWeight: 600 }
-const rightColumnStyle: React.CSSProperties = { flex: 1, minWidth: 300 }
-const buttonGroupStyle: React.CSSProperties = { display: 'flex', gap: '0.5rem', marginTop: '1rem' }
 
 export function CardEditor() {
   const { cardId } = useParams<{ cardId: string }>()
@@ -166,9 +148,11 @@ export function CardEditor() {
 
   if (!isAuthenticated) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <div className="card-editor-auth">
         <p>Sign in to edit cards</p>
-        <button onClick={() => loginWithRedirect()}>Sign in</button>
+        <button className="btn-primary" onClick={() => loginWithRedirect()}>
+          Sign in
+        </button>
       </div>
     )
   }
@@ -184,24 +168,31 @@ export function CardEditor() {
   const metadata = card.metadata as { icon?: string; color?: string }
 
   return (
-    <div style={layoutStyle}>
+    <div className="card-editor">
       {/* Left column: card preview */}
-      <div style={leftColumnStyle}>
-        <div style={{ ...previewBaseStyle, backgroundColor: metadata.color ?? '#6366F1' }}>
-          {metadata.icon ? <img src={metadata.icon} alt="Card icon" style={iconStyle} /> : null}
+      <div className="card-editor-preview">
+        <div
+          className="card-editor-artwork"
+          style={{ backgroundColor: metadata.color ?? '#6366F1' }}
+        >
+          {metadata.icon ? (
+            <img src={metadata.icon} alt="Card icon" className="card-editor-artwork-icon" />
+          ) : null}
         </div>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           aria-label="Card title"
-          style={titleInputStyle}
+          className="card-editor-title-input"
         />
-        <button style={{ marginTop: '0.5rem' }}>Change icon</button>
+        <button className="btn-secondary" style={{ marginTop: 'var(--space-sm)' }}>
+          Change icon
+        </button>
       </div>
 
       {/* Right column: track list */}
-      <div style={rightColumnStyle}>
+      <div className="card-editor-tracks">
         <h2>Tracks</h2>
         <TrackList
           tracks={tracks}
@@ -210,11 +201,11 @@ export function CardEditor() {
           onTitleChange={handleTitleChange}
         />
 
-        <div style={buttonGroupStyle}>
-          <button onClick={handleSave} disabled={saving} aria-label="Save">
+        <div className="card-editor-actions">
+          <button className="btn-primary" onClick={handleSave} disabled={saving} aria-label="Save">
             {saving ? 'Saving...' : 'Save'}
           </button>
-          <button onClick={() => navigate('/')} aria-label="Cancel">
+          <button className="btn-ghost" onClick={() => navigate('/')} aria-label="Cancel">
             Cancel
           </button>
         </div>

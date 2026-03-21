@@ -1,0 +1,90 @@
+/* AIDEV-NOTE: Card grid — Yoto-style 2:3 portrait cards with saturated backgrounds */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-lg);
+}
+
+.card-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  text-decoration: none;
+  color: white;
+  transition: transform var(--duration-normal) var(--easing-spring);
+  overflow: hidden;
+  position: relative;
+}
+
+.card-grid-item:hover {
+  transform: scale(1.02);
+  text-decoration: none;
+}
+
+.card-grid-image {
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--space-md);
+  object-fit: contain;
+}
+
+.card-grid-title {
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.card-grid-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 2 / 3;
+  border: 2px dashed var(--color-text-secondary);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.5;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  transition:
+    opacity var(--duration-normal) var(--easing-smooth),
+    transform var(--duration-normal) var(--easing-spring);
+}
+
+.card-grid-add:hover {
+  opacity: 0.8;
+  transform: scale(1.02);
+}
+
+.card-grid-add-icon {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-xs);
+}
+
+.card-grid-sign-in {
+  text-align: center;
+  padding: var(--space-2xl);
+}
+
+.card-grid-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.card-grid-section-header h2 {
+  margin: 0;
+}
+
+.card-grid-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-regular);
+}

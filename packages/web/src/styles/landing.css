@@ -1,0 +1,39 @@
+/* Landing page layout */
+.landing {
+  max-width: 100%;
+}
+
+.landing-hero {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.landing-heading {
+  margin-bottom: var(--space-xl);
+}
+
+/* AIDEV-NOTE: accent text in heading per design spec — coral italic */
+.landing-heading .accent {
+  color: var(--color-primary);
+  font-style: italic;
+}
+
+.landing-cards-section {
+  margin-top: var(--space-2xl);
+}
+
+.landing-error {
+  text-align: center;
+  padding: var(--space-xl);
+}
+
+.landing-error p {
+  color: var(--color-error);
+  margin-bottom: var(--space-md);
+}
+
+.landing-adding {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--color-text-secondary);
+}
