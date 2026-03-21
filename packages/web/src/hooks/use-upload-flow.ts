@@ -36,11 +36,21 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
 
   const streamRef = useRef<{ close: () => void } | null>(null)
 
-  const submitUrl = useCallback((url: string) => {
-    setYoutubeUrl(url)
-    setState('selecting-card')
-    setError(null)
-  }, [])
+  const submitUrl = useCallback(
+    (url: string) => {
+      if (!isAuthenticated) {
+        // AIDEV-NOTE: stash URL before redirecting so we could restore it after
+        // login. For now the user re-pastes — a future enhancement could use
+        // sessionStorage to preserve the URL across the redirect.
+        loginWithRedirect()
+        return
+      }
+      setYoutubeUrl(url)
+      setState('selecting-card')
+      setError(null)
+    },
+    [isAuthenticated, loginWithRedirect],
+  )
 
   // AIDEV-NOTE: SSE event handling extracted from selectCard for clarity.
   // Called once the job stream is established — listens for progress/complete/error.

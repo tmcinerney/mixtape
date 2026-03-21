@@ -51,6 +51,7 @@ describe('useUploadFlow', () => {
   })
 
   it('transitions to selecting-card when URL is submitted', () => {
+    mockIsAuthenticated = true
     const { result } = renderHook(useHook)
 
     act(() => {
