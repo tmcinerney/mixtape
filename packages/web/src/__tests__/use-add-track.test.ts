@@ -20,12 +20,12 @@ import { useAddTrack } from '../hooks/use-add-track'
 
 // AIDEV-NOTE: Test helpers matching the real Yoto API chapter format —
 // chapters is an array of { key, title, tracks: [{ url, format, ... }] }
-function makeChapter(key: string, title: string, url: string) {
+function makeChapter(key: string, title: string, trackUrl: string) {
   return {
     key,
     title,
     overlayLabel: String(Number(key) + 1),
-    tracks: [{ url, format: 'opus', channels: 'stereo', type: 'audio' }],
+    tracks: [{ key: '01', trackUrl, format: 'opus', channels: 'stereo', type: 'audio' }],
   }
 }
 
@@ -62,7 +62,7 @@ describe('useAddTrack', () => {
     expect(chapters[0]!.title).toBe('My Track')
     expect(chapters[0]!.tracks[0]).toEqual(
       expect.objectContaining({
-        url: 'https://media.yoto.io/some-file.opus',
+        trackUrl: 'https://media.yoto.io/some-file.opus',
         format: 'opus',
         channels: 'stereo',
         type: 'audio',

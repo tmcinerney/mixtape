@@ -2,7 +2,8 @@ import { useCallback, useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
 
 interface Track {
-  url: string
+  key: string
+  trackUrl: string
   format: string
   channels: string
   type: string
@@ -66,9 +67,12 @@ export function useAddTrack() {
           key: paddedKey,
           title,
           overlayLabel: String(nextIndex + 1),
+          // AIDEV-NOTE: Yoto API requires `trackUrl` (not `url`) and `key` on each track.
+          // Confirmed via network inspection of real card payloads.
           tracks: [
             {
-              url: mediaUrl,
+              key: '01',
+              trackUrl: mediaUrl,
               format: 'opus',
               channels: 'stereo',
               type: 'audio',
