@@ -1,8 +1,16 @@
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { Hono } from 'hono'
 import { jobRoutes } from './routes/jobs'
+import { serveStatic } from './static'
 
 // AIDEV-NOTE: version placeholder until we wire up package.json reading
 const VERSION = '0.1.0'
+
+// AIDEV-NOTE: In production Docker image, web dist is copied to packages/web/dist
+// relative to the server's working directory. Resolve from cwd so it works in both
+// development (pnpm build from root) and Docker contexts.
+const WEB_DIST_PATH = resolve(process.cwd(), 'packages/web/dist')
 
 export function createApp() {
   const app = new Hono()
@@ -11,6 +19,11 @@ export function createApp() {
 
   // Job routes handle POST/DELETE/GET /api/jobs
   app.route('', jobRoutes)
+
+  // AIDEV-NOTE: Static serving only when built web assets exist (production or after build)
+  if (process.env['NODE_ENV'] === 'production' || existsSync(WEB_DIST_PATH)) {
+    app.use('*', serveStatic(WEB_DIST_PATH))
+  }
 
   return app
 }
