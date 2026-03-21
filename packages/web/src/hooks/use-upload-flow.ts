@@ -33,7 +33,7 @@ export function useUploadFlow(): UploadFlowResult {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const eventSourceRef = useRef<EventSource | null>(null)
+  const eventSourceRef = useRef<{ close: () => void } | null>(null)
 
   const submitUrl = useCallback((url: string) => {
     setYoutubeUrl(url)
@@ -63,9 +63,9 @@ export function useUploadFlow(): UploadFlowResult {
         setState('uploading')
 
         // AIDEV-NOTE: SSE event listeners for job progress
-        eventSource.addEventListener('progress', (event: MessageEvent) => {
+        eventSource.addEventListener('progress', (event: Event) => {
           try {
-            const data = JSON.parse(event.data as string) as JobProgress
+            const data = JSON.parse((event as MessageEvent).data as string) as JobProgress
             if (data.step === 'complete') {
               eventSource.close()
               setMediaUrl((data as { step: 'complete'; mediaUrl: string }).mediaUrl)

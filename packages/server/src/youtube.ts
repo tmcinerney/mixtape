@@ -42,7 +42,9 @@ export async function downloadAudio(
   url: string,
   onProgress: (pct: number) => void,
 ): Promise<DownloadResult> {
-  const tempPath = join(tmpdir(), `mixtape-${crypto.randomUUID()}.m4a`)
+  // AIDEV-NOTE: use %(ext)s so yt-dlp controls the final extension after post-processing
+  const tempBase = join(tmpdir(), `mixtape-${crypto.randomUUID()}`)
+  const tempTemplate = `${tempBase}.%(ext)s`
 
   const args = [
     '--extract-audio',
@@ -51,12 +53,11 @@ export async function downloadAudio(
     '--audio-quality',
     '0',
     '-o',
-    tempPath,
+    tempTemplate,
     '--print',
-    '{"title":"%(title)s","duration":%(duration)s,"filename":"%(filepath)s"}',
-    '--print-to-file',
-    '%(title)s',
-    '/dev/null',
+    'before_dl:{"title":"%(title)s","duration":%(duration)s}',
+    '--print',
+    'after_move:%(filepath)s',
     url,
   ]
 
@@ -83,7 +84,7 @@ export async function downloadAudio(
       if (code !== 0) {
         // Attempt cleanup of partial download
         try {
-          await unlink(tempPath)
+          await unlink(`${tempBase}.m4a`)
         } catch {
           // File may not exist yet, ignore
         }
@@ -93,9 +94,13 @@ export async function downloadAudio(
       }
 
       try {
-        const jsonLine = stdoutOutput.trim().split('\n').pop() ?? '{}'
-        const meta = JSON.parse(jsonLine) as { title: string; duration: number; filename: string }
-        const filePath = meta.filename || tempPath
+        // AIDEV-NOTE: stdout has two --print outputs:
+        // Line 1 (before_dl): JSON metadata
+        // Line 2 (after_move): final file path
+        const lines = stdoutOutput.trim().split('\n')
+        const metaLine = lines[0] ?? '{}'
+        const filePath = lines[1]?.trim() ?? `${tempBase}.m4a`
+        const meta = JSON.parse(metaLine) as { title: string; duration: number }
         const fileStat = await stat(filePath)
 
         resolve({
