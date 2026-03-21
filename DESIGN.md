@@ -26,11 +26,13 @@ Adding YouTube audio to Yoto MYO cards currently requires either the MCP server 
 ### 1. YouTube-to-Yoto Upload
 
 1. User pastes YouTube URL into text box
-2. Backend extracts audio via yt-dlp + ffmpeg (M4A preferred)
-3. User selects an existing card or creates a new one
-4. Backend uploads audio to Yoto via SDK (SHA256 → presigned URL → upload → transcode polling)
-5. Track is added to the selected card
-6. User can rename, reorder, or pick an icon
+2. User selects an existing card or creates a new one
+3. Backend extracts audio via yt-dlp + ffmpeg (M4A preferred)
+4. Backend uploads audio to Yoto (SHA256 → presigned URL → S3 → transcode polling)
+5. AI suggests a clean track name (OpenAI gpt-4o-mini, runs in parallel with upload)
+6. User sees a confirmation screen with the suggested title (editable) and optional icon picker
+7. Track is added to the selected card with the chosen title and icon
+8. User can further edit in the card editor (rename, reorder, delete)
 
 ### 2. Authentication
 
@@ -64,9 +66,12 @@ Not a My Yoto replacement — just enough to complete the upload flow:
 **Hono** (TypeScript) — minimal job runner:
 
 - YouTube audio extraction (yt-dlp + ffmpeg)
-- Upload to Yoto via `@yotoplay/yoto-sdk` (>=1.2.2, presigned URL fix)
-- Progress reporting via **SSE** (download → convert → upload → transcode)
+- Upload to Yoto via raw fetch (SDK is browser-only; uses presigned S3 URLs + transcode polling)
+- Progress reporting via **SSE** (download → convert → upload → transcode → complete with titles)
+- AI title suggestion via OpenAI gpt-4o-mini (runs in parallel with upload, zero latency cost)
+- Basic title sanitization (strips YouTube noise patterns) as fallback when no API key
 - Validation with **Zod** (shared schemas with frontend)
+- In-memory job queue with max 3 concurrent, auto-cleanup after 5 minutes
 - Frontend passes Yoto access token per-job; backend never stores tokens
 - Stateless — no database, no sessions
 - Specific error messages for yt-dlp failures (private, age-restricted, region-locked)
@@ -79,9 +84,14 @@ Monorepo with shared types:
 mixtape/
 ├── packages/
 │   ├── web/          # Vite + React SPA
-│   └── server/       # Hono API
+│   ├── server/       # Hono API
+│   └── shared/       # Zod schemas, shared types
 ├── package.json      # Workspace root
 ├── tsconfig.base.json
+├── Dockerfile        # Multi-stage production build
+├── Dockerfile.dev    # Dev image with yt-dlp + ffmpeg
+├── docker-compose.yml       # Dev environment (hot reload)
+├── docker-compose.prod.yml  # Production build
 └── DESIGN.md
 ```
 
@@ -104,9 +114,11 @@ mixtape/
 ## Screens
 
 1. **Landing page** — YouTube URL input, card grid (light + dark)
-2. **Processing state** — animated cassette loader, 3-step progress
-3. **Card editor** — artwork + track list, two-column layout (light + dark)
-4. **Confirmation** — success state
+2. **Card selector** — pick target card from user's library
+3. **Processing state** — animated cassette loader, 3-step progress (download/convert/upload)
+4. **Track confirmation** — AI-suggested title (editable), icon picker, add/cancel
+5. **Card editor** — artwork + track list, two-column layout (light + dark)
+6. **Success** — track added confirmation with "View Card" / "Add Another"
 
 ## Yoto API Surface
 
@@ -128,8 +140,8 @@ mixtape/
 - [x] Error handling → **Specific yt-dlp error mapping**
 - [x] PKCE token refresh → **Proactive silent refresh via refresh token**
 - [x] Upload flow → **Backend handles full pipeline** (frontend passes token per-job)
+- [x] Backend rate limiting → **In-memory queue, max 3 concurrent jobs**
 - [ ] Which homelab host (apollo vs hermes)
-- [ ] Backend rate limiting / max concurrent downloads
 
 ## Non-Goals (v1)
 
