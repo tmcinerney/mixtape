@@ -6,3 +6,4 @@ export {
   JobStatusSchema,
   type JobStatus,
 } from './schemas'
+export { YtdlpErrorCode, PipelineError } from './errors'
