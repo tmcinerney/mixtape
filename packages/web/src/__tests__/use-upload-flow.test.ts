@@ -12,12 +12,10 @@ vi.mock('@auth0/auth0-react', () => ({
   }),
 }))
 
-const mockListCards = vi.fn()
 vi.mock('../auth/yoto-provider', () => ({
   useYoto: () => ({
     sdk: {
-      library: { getCards: mockListCards },
-      content: { getCard: vi.fn(), updateCard: vi.fn() },
+      content: { getMyCards: vi.fn(), getCard: vi.fn(), updateCard: vi.fn() },
     },
     isReady: true,
   }),
@@ -41,7 +39,6 @@ describe('useUploadFlow', () => {
     mockGetAccessTokenSilently.mockClear()
     mockStartJob.mockClear()
     mockCancelJob.mockClear()
-    mockListCards.mockClear()
   })
 
   it('starts in idle state', () => {

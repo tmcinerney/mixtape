@@ -2,11 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
-
-// AIDEV-NOTE: placeholder pages — will be replaced with real components in later phases
-function LandingPage() {
-  return <h1>mixtape</h1>
-}
+import { LandingPage } from './pages/landing'
 
 function CardEditor() {
   return <h1>Card Editor</h1>
