@@ -18,7 +18,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         redirect_uri: window.location.origin + '/callback',
       }}
       useRefreshTokens={true}
-      cacheLocation="memory"
+      // AIDEV-NOTE: localstorage persists tokens across page reloads/navigation.
+      // "memory" loses the session on every hard navigation.
+      cacheLocation="localstorage"
     >
       {children}
     </Auth0Provider>

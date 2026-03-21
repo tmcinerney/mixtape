@@ -79,7 +79,7 @@ describe('AuthProvider', () => {
     expect(mockAuth0Provider).toHaveBeenCalledWith(
       expect.objectContaining({
         useRefreshTokens: true,
-        cacheLocation: 'memory',
+        cacheLocation: 'localstorage',
       }),
     )
   })

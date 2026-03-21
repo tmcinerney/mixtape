@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth0 } from '@auth0/auth0-react'
 import { useYoto } from '../auth/yoto-provider'
 import { TrackList, type Track } from '../components/track-list'
 import type { YotoJson } from '@yotoplay/yoto-sdk'
@@ -82,12 +83,15 @@ const buttonGroupStyle: React.CSSProperties = { display: 'flex', gap: '0.5rem', 
 export function CardEditor() {
   const { cardId } = useParams<{ cardId: string }>()
   const navigate = useNavigate()
+  const { isAuthenticated, isLoading: authLoading, loginWithRedirect } = useAuth0()
   const { sdk, isReady } = useYoto()
   const [card, setCard] = useState<CardData | null>(null)
   const [title, setTitle] = useState('')
   const [tracks, setTracks] = useState<Track[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  // No automatic redirect — just gate on auth state in the render below
 
   useEffect(() => {
     if (!isReady || !sdk || !cardId) return
@@ -140,6 +144,19 @@ export function CardEditor() {
     await sdk.content.updateCard(updated as unknown as YotoJson)
     setSaving(false)
     navigate('/')
+  }
+
+  if (authLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <p>Sign in to edit cards</p>
+        <button onClick={() => loginWithRedirect()}>Sign in</button>
+      </div>
+    )
   }
 
   if (loading) {
