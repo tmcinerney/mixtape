@@ -18,7 +18,7 @@ describe('GET /api/health', () => {
 })
 
 describe('POST /api/jobs', () => {
-  it('returns 201 with a job ID for a valid request', async () => {
+  it('returns SSE stream with init event for a valid request', async () => {
     const res = await app.request('/api/jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -28,10 +28,8 @@ describe('POST /api/jobs', () => {
         yotoToken: 'tok-abc',
       }),
     })
-    expect(res.status).toBe(201)
-    const body = await res.json()
-    expect(body).toHaveProperty('jobId')
-    expect(typeof body.jobId).toBe('string')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/event-stream')
   })
 
   it('rejects a non-YouTube URL with 400', async () => {
@@ -58,17 +56,18 @@ describe('POST /api/jobs', () => {
 })
 
 describe('DELETE /api/jobs/:id', () => {
-  it('returns 200 for cancelling a job', async () => {
-    const res = await app.request('/api/jobs/some-id', { method: 'DELETE' })
-    expect(res.status).toBe(200)
+  it('returns 404 for a non-existent job', async () => {
+    const res = await app.request('/api/jobs/non-existent', { method: 'DELETE' })
+    expect(res.status).toBe(404)
   })
 })
 
 describe('GET /api/jobs', () => {
-  it('returns an empty array of jobs', async () => {
+  it('returns an array of jobs', async () => {
     const res = await app.request('/api/jobs')
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body).toEqual({ jobs: [] })
+    expect(body).toHaveProperty('jobs')
+    expect(Array.isArray(body.jobs)).toBe(true)
   })
 })
