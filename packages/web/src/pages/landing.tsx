@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUploadFlow } from '../hooks/use-upload-flow'
 import { useAddTrack } from '../hooks/use-add-track'
@@ -37,10 +37,17 @@ export function LandingPage() {
     }
   }
 
-  // Auto-trigger track addition when entering adding-track state
-  if (flow.state === 'adding-track' && flow.mediaUrl && flow.cardId) {
-    handleAddTrack()
-  }
+  // AIDEV-NOTE: Auto-trigger track addition when entering adding-track state.
+  // Must be in useEffect to avoid infinite re-render loop.
+  const addingRef = useRef(false)
+  useEffect(() => {
+    if (flow.state === 'adding-track' && flow.mediaUrl && flow.cardId && !addingRef.current) {
+      addingRef.current = true
+      handleAddTrack().finally(() => {
+        addingRef.current = false
+      })
+    }
+  }, [flow.state, flow.mediaUrl, flow.cardId])
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto' }}>

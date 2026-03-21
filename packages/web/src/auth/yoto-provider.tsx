@@ -21,9 +21,13 @@ export function YotoProvider({ children }: { children: ReactNode }) {
     }
 
     let cancelled = false
-    getAccessTokenSilently().then((t) => {
-      if (!cancelled) setToken(t)
-    })
+    getAccessTokenSilently()
+      .then((t) => {
+        if (!cancelled) setToken(t)
+      })
+      .catch((err) => {
+        console.error('Failed to get access token:', err)
+      })
     return () => {
       cancelled = true
     }
