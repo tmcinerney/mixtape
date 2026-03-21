@@ -15,6 +15,25 @@ import { uploadToYoto, computeSha256 } from '../yoto-upload'
 const FAKE_FILE_CONTENT = Buffer.from('fake audio content')
 const FAKE_SHA256 = createHash('sha256').update(FAKE_FILE_CONTENT).digest('hex')
 
+// AIDEV-NOTE: Helper to create mock responses matching the real Yoto API shape.
+// Upload URL: { upload: { uploadUrl, uploadId } }
+// Transcode: { transcode: { progress, transcodedSha256, transcodedInfo } }
+function uploadUrlResponse(uploadUrl: string | null, uploadId = 'upload-123') {
+  return {
+    ok: true,
+    json: async () => ({ upload: { uploadUrl, uploadId } }),
+  }
+}
+
+function transcodeResponse(phase: string, transcodedSha256: string | null = null, percent = 0) {
+  return {
+    ok: true,
+    json: async () => ({
+      transcode: { progress: { phase, percent }, transcodedSha256 },
+    }),
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(readFile).mockResolvedValue(FAKE_FILE_CONTENT)
@@ -30,54 +49,24 @@ describe('computeSha256', () => {
 
 describe('uploadToYoto', () => {
   it('requests a presigned URL with correct params', async () => {
-    // POST to get upload URL
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        uploadUrl: 'https://s3.example.com/presigned',
-        transcodedSha256: null,
-      }),
-    })
-    // PUT to S3
-    mockFetch.mockResolvedValueOnce({ ok: true })
-    // GET transcode status - complete
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        status: 'complete',
-        transcodedSha256: 'transcoded-hash-abc',
-      }),
-    })
+    mockFetch.mockResolvedValueOnce(uploadUrlResponse('https://s3.example.com/presigned'))
+    mockFetch.mockResolvedValueOnce({ ok: true }) // S3 PUT
+    mockFetch.mockResolvedValueOnce(transcodeResponse('complete', 'transcoded-hash-abc'))
 
     const onProgress = vi.fn()
     await uploadToYoto('/tmp/test.m4a', 'test-token', onProgress)
 
-    // First call should be the presigned URL request
+    // First call should be the GET for presigned URL
     const [url, opts] = mockFetch.mock.calls[0]!
-    expect(url).toContain('/audio/upload')
+    expect(url).toContain('/media/transcode/audio/uploadUrl')
+    expect(url).toContain(`sha256=${FAKE_SHA256}`)
     expect(opts.headers['Authorization']).toBe('Bearer test-token')
-    expect(opts.method).toBe('POST')
-    const body = JSON.parse(opts.body)
-    expect(body.sha256).toBe(FAKE_SHA256)
-    expect(body.contentType).toBe('audio/mpeg')
   })
 
   it('PUTs to S3 with audio/mpeg content type', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        uploadUrl: 'https://s3.example.com/presigned',
-        transcodedSha256: null,
-      }),
-    })
-    mockFetch.mockResolvedValueOnce({ ok: true })
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        status: 'complete',
-        transcodedSha256: 'transcoded-hash-abc',
-      }),
-    })
+    mockFetch.mockResolvedValueOnce(uploadUrlResponse('https://s3.example.com/presigned'))
+    mockFetch.mockResolvedValueOnce({ ok: true }) // S3 PUT
+    mockFetch.mockResolvedValueOnce(transcodeResponse('complete', 'transcoded-hash-abc'))
 
     await uploadToYoto('/tmp/test.m4a', 'test-token', vi.fn())
 
@@ -88,44 +77,25 @@ describe('uploadToYoto', () => {
   })
 
   it('skips upload when uploadUrl is null (file already exists)', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        uploadUrl: null,
-        transcodedSha256: 'already-transcoded-hash',
-      }),
-    })
+    mockFetch.mockResolvedValueOnce(uploadUrlResponse(null, 'upload-existing'))
+    // Transcode poll — file already exists so it should be complete
+    mockFetch.mockResolvedValueOnce(transcodeResponse('complete', 'already-transcoded-hash'))
 
     const onProgress = vi.fn()
     const result = await uploadToYoto('/tmp/test.m4a', 'test-token', onProgress)
 
-    // Only one fetch call (the presigned URL request), no S3 PUT
-    expect(mockFetch).toHaveBeenCalledTimes(1)
+    // Two calls: presigned URL request + transcode poll (no S3 PUT)
+    expect(mockFetch).toHaveBeenCalledTimes(2)
     expect(result).toBe('yoto:#already-transcoded-hash')
   })
 
   it('polls transcode status until complete', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        uploadUrl: 'https://s3.example.com/presigned',
-        transcodedSha256: null,
-      }),
-    })
-    mockFetch.mockResolvedValueOnce({ ok: true })
+    mockFetch.mockResolvedValueOnce(uploadUrlResponse('https://s3.example.com/presigned'))
+    mockFetch.mockResolvedValueOnce({ ok: true }) // S3 PUT
     // First poll: pending
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ status: 'pending', transcodedSha256: null }),
-    })
+    mockFetch.mockResolvedValueOnce(transcodeResponse('pending', null, 50))
     // Second poll: complete
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        status: 'complete',
-        transcodedSha256: 'transcoded-hash-xyz',
-      }),
-    })
+    mockFetch.mockResolvedValueOnce(transcodeResponse('complete', 'transcoded-hash-xyz'))
 
     const result = await uploadToYoto('/tmp/test.m4a', 'test-token', vi.fn(), {
       pollIntervalMs: 10,
@@ -137,21 +107,9 @@ describe('uploadToYoto', () => {
   })
 
   it('fires progress callbacks at each step', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        uploadUrl: 'https://s3.example.com/presigned',
-        transcodedSha256: null,
-      }),
-    })
-    mockFetch.mockResolvedValueOnce({ ok: true })
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        status: 'complete',
-        transcodedSha256: 'transcoded-hash',
-      }),
-    })
+    mockFetch.mockResolvedValueOnce(uploadUrlResponse('https://s3.example.com/presigned'))
+    mockFetch.mockResolvedValueOnce({ ok: true }) // S3 PUT
+    mockFetch.mockResolvedValueOnce(transcodeResponse('complete', 'transcoded-hash'))
 
     const onProgress = vi.fn()
     await uploadToYoto('/tmp/test.m4a', 'test-token', onProgress)
@@ -162,19 +120,10 @@ describe('uploadToYoto', () => {
   })
 
   it('throws on transcode timeout', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        uploadUrl: 'https://s3.example.com/presigned',
-        transcodedSha256: null,
-      }),
-    })
-    mockFetch.mockResolvedValueOnce({ ok: true })
+    mockFetch.mockResolvedValueOnce(uploadUrlResponse('https://s3.example.com/presigned'))
+    mockFetch.mockResolvedValueOnce({ ok: true }) // S3 PUT
     // Always pending
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: 'pending', transcodedSha256: null }),
-    })
+    mockFetch.mockResolvedValue(transcodeResponse('pending'))
 
     await expect(
       uploadToYoto('/tmp/test.m4a', 'test-token', vi.fn(), {

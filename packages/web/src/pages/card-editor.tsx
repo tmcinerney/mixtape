@@ -60,6 +60,25 @@ function tracksToChapters(tracks: Track[]): Record<string, ChapterData> {
   return chapters
 }
 
+const layoutStyle: React.CSSProperties = { display: 'flex', gap: '2rem', flexWrap: 'wrap' }
+const leftColumnStyle: React.CSSProperties = { flex: '0 0 200px' }
+
+const previewBaseStyle: React.CSSProperties = {
+  aspectRatio: '2 / 3',
+  borderRadius: '0.5rem',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '1rem',
+  marginBottom: '1rem',
+}
+
+const iconStyle: React.CSSProperties = { width: 64, height: 64, marginBottom: '0.5rem' }
+const titleInputStyle: React.CSSProperties = { width: '100%', fontSize: '1.1rem', fontWeight: 600 }
+const rightColumnStyle: React.CSSProperties = { flex: 1, minWidth: 300 }
+const buttonGroupStyle: React.CSSProperties = { display: 'flex', gap: '0.5rem', marginTop: '1rem' }
+
 export function CardEditor() {
   const { cardId } = useParams<{ cardId: string }>()
   const navigate = useNavigate()
@@ -132,42 +151,26 @@ export function CardEditor() {
   }
 
   return (
-    <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+    <div style={layoutStyle}>
       {/* Left column: card preview */}
-      <div style={{ flex: '0 0 200px' }}>
-        <div
-          style={{
-            aspectRatio: '2 / 3',
-            backgroundColor: card.card.metadata.color,
-            borderRadius: '0.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
-            marginBottom: '1rem',
-          }}
-        >
-          {card.card.metadata.icon && (
-            <img
-              src={card.card.metadata.icon}
-              alt="Card icon"
-              style={{ width: 64, height: 64, marginBottom: '0.5rem' }}
-            />
-          )}
+      <div style={leftColumnStyle}>
+        <div style={{ ...previewBaseStyle, backgroundColor: card.card.metadata.color }}>
+          {card.card.metadata.icon ? (
+            <img src={card.card.metadata.icon} alt="Card icon" style={iconStyle} />
+          ) : null}
         </div>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           aria-label="Card title"
-          style={{ width: '100%', fontSize: '1.1rem', fontWeight: 600 }}
+          style={titleInputStyle}
         />
         <button style={{ marginTop: '0.5rem' }}>Change icon</button>
       </div>
 
       {/* Right column: track list */}
-      <div style={{ flex: 1, minWidth: 300 }}>
+      <div style={rightColumnStyle}>
         <h2>Tracks</h2>
         <TrackList
           tracks={tracks}
@@ -176,7 +179,7 @@ export function CardEditor() {
           onTitleChange={handleTitleChange}
         />
 
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+        <div style={buttonGroupStyle}>
           <button onClick={handleSave} disabled={saving} aria-label="Save">
             {saving ? 'Saving...' : 'Save'}
           </button>

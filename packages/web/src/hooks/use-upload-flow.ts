@@ -5,24 +5,26 @@ import { startJob, cancelJob } from '../api/client'
 
 type FlowState = 'idle' | 'selecting-card' | 'uploading' | 'adding-track' | 'complete' | 'error'
 
+interface UploadFlowOptions {
+  // AIDEV-NOTE: called when SSE reports complete — the hook handles the
+  // adding-track transition internally rather than exposing it as a state
+  // the parent has to watch via useEffect (which caused infinite re-renders).
+  onTrackReady: (mediaUrl: string, cardId: string) => Promise<void>
+}
+
 interface UploadFlowResult {
   state: FlowState
   youtubeUrl: string | null
   cardId: string | null
-  jobId: string | null
   progress: JobProgress | null
-  mediaUrl: string | null
   error: string | null
   submitUrl: (url: string) => void
   selectCard: (cardId: string) => void
   cancel: () => void
   reset: () => void
-  // AIDEV-NOTE: called by landing page after use-add-track completes
-  markComplete: () => void
-  markAddingTrack: (mediaUrl: string) => void
 }
 
-export function useUploadFlow(): UploadFlowResult {
+export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowResult {
   const { isAuthenticated, getAccessTokenSilently, loginWithRedirect } = useAuth0()
 
   const [state, setState] = useState<FlowState>('idle')
@@ -30,16 +32,53 @@ export function useUploadFlow(): UploadFlowResult {
   const [cardId, setCardId] = useState<string | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
   const [progress, setProgress] = useState<JobProgress | null>(null)
-  const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const eventSourceRef = useRef<{ close: () => void } | null>(null)
+  const streamRef = useRef<{ close: () => void } | null>(null)
 
   const submitUrl = useCallback((url: string) => {
     setYoutubeUrl(url)
     setState('selecting-card')
     setError(null)
   }, [])
+
+  // AIDEV-NOTE: SSE event handling extracted from selectCard for clarity.
+  // Called once the job stream is established — listens for progress/complete/error.
+  const listenToStream = useCallback(
+    (eventSource: EventTarget & { close: () => void }, selectedCardId: string) => {
+      eventSource.addEventListener('progress', (event: Event) => {
+        try {
+          const data = JSON.parse((event as MessageEvent).data as string) as JobProgress
+          if (data.step === 'complete') {
+            eventSource.close()
+            const url = (data as { step: 'complete'; mediaUrl: string }).mediaUrl
+            setState('adding-track')
+            onTrackReady(url, selectedCardId)
+              .then(() => setState('complete'))
+              .catch((err) => {
+                setError(err instanceof Error ? err.message : 'Failed to add track')
+                setState('error')
+              })
+          } else if (data.step === 'error') {
+            eventSource.close()
+            setError((data as { step: 'error'; message: string }).message)
+            setState('error')
+          } else {
+            setProgress(data)
+          }
+        } catch {
+          // ignore parse errors
+        }
+      })
+
+      eventSource.addEventListener('error', () => {
+        eventSource.close()
+        setError('Connection lost')
+        setState('error')
+      })
+    },
+    [onTrackReady],
+  )
 
   const selectCard = useCallback(
     async (selectedCardId: string) => {
@@ -49,56 +88,30 @@ export function useUploadFlow(): UploadFlowResult {
       }
 
       setCardId(selectedCardId)
+      setState('uploading')
 
       try {
         const token = await getAccessTokenSilently()
-
         const { jobId: jid, eventSource } = await startJob(
           { youtubeUrl: youtubeUrl!, cardId: selectedCardId, yotoToken: token },
           token,
         )
 
         setJobId(jid)
-        eventSourceRef.current = eventSource
-        setState('uploading')
-
-        // AIDEV-NOTE: SSE event listeners for job progress
-        eventSource.addEventListener('progress', (event: Event) => {
-          try {
-            const data = JSON.parse((event as MessageEvent).data as string) as JobProgress
-            if (data.step === 'complete') {
-              eventSource.close()
-              setMediaUrl((data as { step: 'complete'; mediaUrl: string }).mediaUrl)
-              setState('adding-track')
-            } else if (data.step === 'error') {
-              eventSource.close()
-              setError((data as { step: 'error'; message: string }).message)
-              setState('error')
-            } else {
-              setProgress(data)
-            }
-          } catch {
-            // ignore parse errors
-          }
-        })
-
-        eventSource.addEventListener('error', () => {
-          eventSource.close()
-          setError('Connection lost')
-          setState('error')
-        })
+        streamRef.current = eventSource
+        listenToStream(eventSource, selectedCardId)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to start job')
         setState('error')
       }
     },
-    [isAuthenticated, loginWithRedirect, getAccessTokenSilently, youtubeUrl],
+    [isAuthenticated, loginWithRedirect, getAccessTokenSilently, youtubeUrl, listenToStream],
   )
 
   const cancel = useCallback(async () => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-      eventSourceRef.current = null
+    if (streamRef.current) {
+      streamRef.current.close()
+      streamRef.current = null
     }
     if (jobId) {
       try {
@@ -113,46 +126,31 @@ export function useUploadFlow(): UploadFlowResult {
     setCardId(null)
     setJobId(null)
     setProgress(null)
-    setMediaUrl(null)
     setError(null)
   }, [jobId, getAccessTokenSilently])
 
   const reset = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-      eventSourceRef.current = null
+    if (streamRef.current) {
+      streamRef.current.close()
+      streamRef.current = null
     }
     setState('idle')
     setYoutubeUrl(null)
     setCardId(null)
     setJobId(null)
     setProgress(null)
-    setMediaUrl(null)
     setError(null)
-  }, [])
-
-  const markAddingTrack = useCallback((url: string) => {
-    setMediaUrl(url)
-    setState('adding-track')
-  }, [])
-
-  const markComplete = useCallback(() => {
-    setState('complete')
   }, [])
 
   return {
     state,
     youtubeUrl,
     cardId,
-    jobId,
     progress,
-    mediaUrl,
     error,
     submitUrl,
     selectCard,
     cancel,
     reset,
-    markComplete,
-    markAddingTrack,
   }
 }

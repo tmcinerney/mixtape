@@ -32,6 +32,9 @@ let mockIsAuthenticated = false
 
 import { useUploadFlow } from '../hooks/use-upload-flow'
 
+const mockOnTrackReady = vi.fn().mockResolvedValue(undefined)
+const useHook = () => useUploadFlow({ onTrackReady: mockOnTrackReady })
+
 describe('useUploadFlow', () => {
   beforeEach(() => {
     mockIsAuthenticated = false
@@ -39,15 +42,16 @@ describe('useUploadFlow', () => {
     mockGetAccessTokenSilently.mockClear()
     mockStartJob.mockClear()
     mockCancelJob.mockClear()
+    mockOnTrackReady.mockClear()
   })
 
   it('starts in idle state', () => {
-    const { result } = renderHook(() => useUploadFlow())
+    const { result } = renderHook(useHook)
     expect(result.current.state).toBe('idle')
   })
 
   it('transitions to selecting-card when URL is submitted', () => {
-    const { result } = renderHook(() => useUploadFlow())
+    const { result } = renderHook(useHook)
 
     act(() => {
       result.current.submitUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
@@ -60,7 +64,7 @@ describe('useUploadFlow', () => {
   it('triggers login when not authenticated and card is selected', async () => {
     mockIsAuthenticated = false
 
-    const { result } = renderHook(() => useUploadFlow())
+    const { result } = renderHook(useHook)
 
     act(() => {
       result.current.submitUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
@@ -84,7 +88,7 @@ describe('useUploadFlow', () => {
     }
     mockStartJob.mockResolvedValue({ jobId: 'job-1', eventSource: mockEventSource })
 
-    const { result } = renderHook(() => useUploadFlow())
+    const { result } = renderHook(useHook)
 
     act(() => {
       result.current.submitUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
@@ -110,7 +114,7 @@ describe('useUploadFlow', () => {
     mockGetAccessTokenSilently.mockResolvedValue('test-token')
     mockStartJob.mockRejectedValue(new Error('Server error'))
 
-    const { result } = renderHook(() => useUploadFlow())
+    const { result } = renderHook(useHook)
 
     act(() => {
       result.current.submitUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
@@ -135,7 +139,7 @@ describe('useUploadFlow', () => {
     mockStartJob.mockResolvedValue({ jobId: 'job-1', eventSource: mockEventSource })
     mockCancelJob.mockResolvedValue(undefined)
 
-    const { result } = renderHook(() => useUploadFlow())
+    const { result } = renderHook(useHook)
 
     act(() => {
       result.current.submitUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
@@ -154,7 +158,7 @@ describe('useUploadFlow', () => {
   })
 
   it('returns to idle on reset', () => {
-    const { result } = renderHook(() => useUploadFlow())
+    const { result } = renderHook(useHook)
 
     act(() => {
       result.current.submitUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')

@@ -4,47 +4,47 @@ import { YotoProvider } from './auth/yoto-provider'
 import { useTheme } from './hooks/use-theme'
 import { routes } from './routes'
 
+const headerStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '1rem',
+}
+
+const logoStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '0.5rem' }
+const actionsStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '1rem' }
+const avatarStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: '50%' }
+
 function Header() {
   const { theme, toggleTheme } = useTheme()
   const { user, logout, isAuthenticated } = useAuth0()
 
   return (
-    <header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '1rem',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <header style={headerStyle}>
+      <div style={logoStyle}>
         {/* AIDEV-NOTE: cassette reel icon — O—O */}
         <span aria-hidden="true" style={{ fontSize: '1.5rem' }}>
           O—O
         </span>
         <span style={{ fontWeight: 700, fontSize: '1.25rem' }}>mixtape</span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={actionsStyle}>
         <button
           onClick={toggleTheme}
           aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
           {theme === 'light' ? '🌙' : '☀️'}
         </button>
-        {isAuthenticated && user && (
+        {isAuthenticated && user ? (
           <>
-            {user.picture && (
-              <img
-                src={user.picture}
-                alt={user.name ?? 'User avatar'}
-                style={{ width: 32, height: 32, borderRadius: '50%' }}
-              />
-            )}
+            {user.picture ? (
+              <img src={user.picture} alt={user.name ?? 'User avatar'} style={avatarStyle} />
+            ) : null}
             <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
               Logout
             </button>
           </>
-        )}
+        ) : null}
       </div>
     </header>
   )

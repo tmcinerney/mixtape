@@ -47,9 +47,9 @@ export function UploadProgress({ progress, title, onCancel }: UploadProgressProp
               >
                 {label}
               </span>
-              {isCurrent && percentage !== null && (
+              {isCurrent && percentage !== null ? (
                 <div style={{ fontSize: '0.875rem' }}>{percentage}%</div>
-              )}
+              ) : null}
             </div>
           )
         })}

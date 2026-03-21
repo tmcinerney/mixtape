@@ -9,7 +9,7 @@ vi.mock('../auth/yoto-provider', () => ({
   useYoto: () => mockUseYoto(),
 }))
 
-import { IconPicker, _resetIconCache } from '../components/icon-picker'
+import { IconPicker } from '../components/icon-picker'
 
 // AIDEV-NOTE: Matches SDK DisplayIcon shape — uses title (not name), no category
 const mockIcons = [
@@ -69,7 +69,6 @@ describe('IconPicker', () => {
   const onSelect = vi.fn()
 
   beforeEach(() => {
-    _resetIconCache()
     mockGetDisplayIcons.mockReset()
     onSelect.mockReset()
     mockUseYoto.mockReturnValue({

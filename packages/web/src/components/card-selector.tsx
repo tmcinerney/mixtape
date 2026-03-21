@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
 import { useYoto } from '../auth/yoto-provider'
 
 interface Card {
@@ -12,25 +11,19 @@ interface CardSelectorProps {
   onCancel: () => void
 }
 
-// AIDEV-NOTE: triggers loginWithRedirect if user is not authenticated.
-// Once authenticated, fetches cards from Yoto SDK and renders a list.
+// AIDEV-NOTE: This component is only rendered when the user is authenticated
+// (the upload flow hook handles loginWithRedirect before reaching this point).
+// It fetches cards from the Yoto SDK and renders a selection list.
 export function CardSelector({ onSelect, onCancel }: CardSelectorProps) {
-  const { isAuthenticated, loginWithRedirect } = useAuth0()
   const { sdk, isReady } = useYoto()
   const [cards, setCards] = useState<Card[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      loginWithRedirect()
-      return
-    }
-
     if (!isReady || !sdk) return
 
     let cancelled = false
-    // AIDEV-NOTE: SDK method is content.getMyCards(), returns UserCard[] directly
     sdk.content
       .getMyCards()
       .then((result: Card[]) => {
@@ -49,11 +42,7 @@ export function CardSelector({ onSelect, onCancel }: CardSelectorProps) {
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, isReady, sdk, loginWithRedirect])
-
-  if (!isAuthenticated) {
-    return <p>Redirecting to login...</p>
-  }
+  }, [isReady, sdk])
 
   if (loading) {
     return <p>Loading your cards...</p>

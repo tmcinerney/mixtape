@@ -52,7 +52,7 @@ export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackL
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {i > 0 && (
+            {i > 0 ? (
               <button
                 onClick={() => moveUp(i)}
                 aria-label="Move up"
@@ -60,8 +60,8 @@ export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackL
               >
                 ▲
               </button>
-            )}
-            {i < tracks.length - 1 && (
+            ) : null}
+            {i < tracks.length - 1 ? (
               <button
                 onClick={() => moveDown(i)}
                 aria-label="Move down"
@@ -69,7 +69,7 @@ export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackL
               >
                 ▼
               </button>
-            )}
+            ) : null}
           </div>
           <span style={{ minWidth: '2ch', textAlign: 'right', opacity: 0.5 }}>{i + 1}</span>
           <input

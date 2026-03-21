@@ -8,6 +8,42 @@ interface CardGridProps {
   onAddPlaylist?: () => void
 }
 
+const gridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+  gap: '1rem',
+}
+
+const cardStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  aspectRatio: '2 / 3',
+  backgroundColor: '#6366F1',
+  borderRadius: '0.5rem',
+  padding: '1rem',
+  textDecoration: 'none',
+  color: 'white',
+}
+
+const cardImageStyle: React.CSSProperties = { width: 48, height: 48, marginBottom: '0.5rem' }
+const cardTitleStyle: React.CSSProperties = { fontWeight: 600, textAlign: 'center' }
+const signInStyle: React.CSSProperties = { textAlign: 'center', padding: '2rem' }
+
+const addButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  aspectRatio: '2 / 3',
+  border: '2px dashed currentColor',
+  borderRadius: '0.5rem',
+  background: 'transparent',
+  cursor: 'pointer',
+  opacity: 0.6,
+}
+
 // AIDEV-NOTE: getMyCards() returns UserCard[] — a summary type with cardId, title, cover.
 // It does NOT include metadata/content. Full card data is loaded in the editor via getCard().
 export function CardGrid({ onAddPlaylist }: CardGridProps) {
@@ -36,7 +72,7 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
 
   if (!isAuthenticated) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <div style={signInStyle}>
         <p>Sign in to see your cards</p>
         <button onClick={() => loginWithRedirect()}>Sign in</button>
       </div>
@@ -48,56 +84,21 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
   }
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-        gap: '1rem',
-      }}
-    >
+    <div style={gridStyle}>
       {cards.map((card) => (
         <Link
           key={card.cardId}
           to={`/cards/${card.cardId}`}
           aria-label={card.title}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            aspectRatio: '2 / 3',
-            backgroundColor: '#6366F1',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            textDecoration: 'none',
-            color: 'white',
-          }}
+          style={cardStyle}
         >
-          {card.cover?.imageS && (
-            <img
-              src={card.cover.imageS}
-              alt=""
-              style={{ width: 48, height: 48, marginBottom: '0.5rem' }}
-            />
-          )}
-          <span style={{ fontWeight: 600, textAlign: 'center' }}>{card.title}</span>
+          {card.cover?.imageS ? (
+            <img src={card.cover.imageS} alt="" style={cardImageStyle} />
+          ) : null}
+          <span style={cardTitleStyle}>{card.title}</span>
         </Link>
       ))}
-      <button
-        onClick={onAddPlaylist}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          aspectRatio: '2 / 3',
-          border: '2px dashed currentColor',
-          borderRadius: '0.5rem',
-          background: 'transparent',
-          cursor: 'pointer',
-          opacity: 0.6,
-        }}
-      >
+      <button onClick={onAddPlaylist} style={addButtonStyle}>
         <span style={{ fontSize: '2rem' }}>+</span>
         <span>Add Playlist</span>
       </button>

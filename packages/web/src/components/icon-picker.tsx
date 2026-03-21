@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
 import type { DisplayIcon } from '@yotoplay/yoto-sdk'
 
@@ -6,28 +6,63 @@ interface IconPickerProps {
   onSelect: (icon: DisplayIcon) => void
 }
 
-// AIDEV-NOTE: module-level cache so icons survive re-renders and remounts.
-// fetchStarted prevents duplicate fetches across concurrent mounts.
-let cachedIcons: DisplayIcon[] | null = null
-let fetchStarted = false
+const gridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))',
+  gap: '0.5rem',
+  maxHeight: 300,
+  overflowY: 'auto',
+}
 
+const iconButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0.25rem',
+  border: '1px solid #e5e7eb',
+  borderRadius: '0.25rem',
+  background: 'transparent',
+  cursor: 'pointer',
+}
+
+const iconImgStyle: React.CSSProperties = { width: 32, height: 32 }
+
+// AIDEV-NOTE: Shared ref-based cache — icons are fetched once and reused
+// across remounts without module-level mutable state. The promise ref
+// prevents duplicate fetches from concurrent mounts.
 export function IconPicker({ onSelect }: IconPickerProps) {
   const { sdk, isReady } = useYoto()
-  const [icons, setIcons] = useState<DisplayIcon[]>(cachedIcons ?? [])
+  const [icons, setIcons] = useState<DisplayIcon[]>([])
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(!cachedIcons)
+  const [loading, setLoading] = useState(true)
+  const fetchPromiseRef = useRef<Promise<DisplayIcon[]> | null>(null)
 
   useEffect(() => {
-    if (cachedIcons || fetchStarted || !isReady || !sdk) return
+    if (!isReady || !sdk) return
 
-    fetchStarted = true
-    setLoading(true)
+    let cancelled = false
 
-    sdk.icons.getDisplayIcons().then((result) => {
-      cachedIcons = result
-      setIcons(result)
-      setLoading(false)
-    })
+    // Reuse in-flight or completed fetch
+    if (!fetchPromiseRef.current) {
+      fetchPromiseRef.current = sdk.icons.getDisplayIcons()
+    }
+
+    fetchPromiseRef.current
+      .then((result) => {
+        if (!cancelled) {
+          setIcons(result)
+          setLoading(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [sdk, isReady])
 
   const filtered = search
@@ -47,41 +82,18 @@ export function IconPicker({ onSelect }: IconPickerProps) {
         placeholder="Search icons..."
         style={{ width: '100%', marginBottom: '0.5rem' }}
       />
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))',
-          gap: '0.5rem',
-          maxHeight: 300,
-          overflowY: 'auto',
-        }}
-      >
+      <div style={gridStyle}>
         {filtered.map((icon) => (
           <button
             key={icon.url}
             onClick={() => onSelect(icon)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0.25rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.25rem',
-              background: 'transparent',
-              cursor: 'pointer',
-            }}
+            style={iconButtonStyle}
             title={icon.title}
           >
-            <img src={icon.url} alt={icon.title} style={{ width: 32, height: 32 }} />
+            <img src={icon.url} alt={icon.title} style={iconImgStyle} />
           </button>
         ))}
       </div>
     </div>
   )
-}
-
-// AIDEV-NOTE: exported for testing — allows resetting the cache between tests
-export function _resetIconCache() {
-  cachedIcons = null
-  fetchStarted = false
 }

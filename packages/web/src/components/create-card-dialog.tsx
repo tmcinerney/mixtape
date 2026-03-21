@@ -93,7 +93,7 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
           <button onClick={() => setShowIconPicker(!showIconPicker)}>
             {icon ? `Icon: ${icon.title}` : 'Choose icon'}
           </button>
-          {showIconPicker && (
+          {showIconPicker ? (
             <div style={{ marginTop: '0.5rem' }}>
               <IconPicker
                 onSelect={(selected) => {
@@ -102,7 +102,7 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
                 }}
               />
             </div>
-          )}
+          ) : null}
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
