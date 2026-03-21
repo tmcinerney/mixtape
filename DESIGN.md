@@ -53,25 +53,44 @@ Not a My Yoto replacement — just enough to complete the upload flow:
 
 ### Frontend
 
-- Static SPA (framework TBD)
+- **Vite + React** static SPA (TypeScript)
 - Talks directly to Yoto API for card/icon operations using PKCE access token
 - Calls backend only for YouTube download + Yoto upload
+- OAuth: Authorization Code + PKCE with proactive silent refresh via refresh token
 - Dark mode with system preference detection
 
 ### Backend
 
-Minimal job runner:
+**Hono** (TypeScript) — minimal job runner:
 
 - YouTube audio extraction (yt-dlp + ffmpeg)
-- Upload to Yoto (SHA256, presigned URL, file upload, transcode polling)
-- Progress reporting (SSE or WebSocket)
+- Upload to Yoto via `@yotoplay/yoto-sdk` (>=1.2.2, presigned URL fix)
+- Progress reporting via **SSE** (download → convert → upload → transcode)
+- Validation with **Zod** (shared schemas with frontend)
+- Frontend passes Yoto access token per-job; backend never stores tokens
 - Stateless — no database, no sessions
-- TypeScript (matches Yoto SDK)
+- Specific error messages for yt-dlp failures (private, age-restricted, region-locked)
+
+### Repo Structure
+
+Monorepo with shared types:
+
+```
+mixtape/
+├── packages/
+│   ├── web/          # Vite + React SPA
+│   └── server/       # Hono API
+├── package.json      # Workspace root
+├── tsconfig.base.json
+└── DESIGN.md
+```
 
 ### Deployment
 
-- Docker container on homelab
+- Single Docker image published to **GHCR** (GitHub Actions on push/tag)
+- Backend serves SPA static files in production
 - yt-dlp + ffmpeg baked into image
+- Docker container on homelab
 - Cloudflare Tunnel for family access
 - Cloudflare Access with Google auth
 
@@ -91,22 +110,24 @@ Minimal job runner:
 
 ## Yoto API Surface
 
-| Capability | Used For |
-|---|---|
-| OAuth PKCE | User login (client-side) |
-| List cards | Card picker |
-| Get card | Track list, current state |
-| Create card | New card from upload flow |
-| Update card | Add tracks, reorder, rename, set icon |
-| Upload audio | Upload extracted YouTube audio |
-| Search icons | Icon picker with previews |
+| Capability   | Used For                              |
+| ------------ | ------------------------------------- |
+| OAuth PKCE   | User login (client-side)              |
+| List cards   | Card picker                           |
+| Get card     | Track list, current state             |
+| Create card  | New card from upload flow             |
+| Update card  | Add tracks, reorder, rename, set icon |
+| Upload audio | Upload extracted YouTube audio        |
+| Search icons | Icon picker with previews             |
 
 ## Open Questions
 
-- [ ] Frontend framework (Next.js vs Hono+Vite vs Fastify+Vite)
-- [ ] Progress reporting (WebSocket vs SSE vs polling)
-- [ ] Error handling for failed downloads (private, age-restricted, region-locked)
-- [ ] PKCE token refresh strategy
+- [x] Frontend framework → **Vite + React**
+- [x] Backend framework → **Hono + Zod**
+- [x] Progress reporting → **SSE**
+- [x] Error handling → **Specific yt-dlp error mapping**
+- [x] PKCE token refresh → **Proactive silent refresh via refresh token**
+- [x] Upload flow → **Backend handles full pipeline** (frontend passes token per-job)
 - [ ] Which homelab host (apollo vs hermes)
 - [ ] Backend rate limiting / max concurrent downloads
 
