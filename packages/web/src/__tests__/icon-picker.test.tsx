@@ -9,7 +9,7 @@ vi.mock('../auth/yoto-provider', () => ({
   useYoto: () => mockUseYoto(),
 }))
 
-import { IconPicker } from '../components/icon-picker'
+import { IconPicker, _resetIconCache } from '../components/icon-picker'
 
 const mockIcons = [
   { name: 'Moon', url: 'https://icons.yoto.com/moon.png', category: 'nature' },
@@ -23,6 +23,7 @@ describe('IconPicker', () => {
   const onSelect = vi.fn()
 
   beforeEach(() => {
+    _resetIconCache()
     mockGetDisplayIcons.mockReset()
     onSelect.mockReset()
     mockUseYoto.mockReturnValue({
