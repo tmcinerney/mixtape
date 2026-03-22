@@ -64,6 +64,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .track-list-icon-btn:hover {
@@ -78,16 +79,11 @@
 }
 
 .track-list-icon-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 20px;
   height: 20px;
-  border-radius: 2px;
-  border: 1px dashed var(--color-text-secondary);
-  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
-  opacity: 0.5;
+  opacity: 0.4;
+  flex-shrink: 0;
 }
 
 .track-list-icon-popover {

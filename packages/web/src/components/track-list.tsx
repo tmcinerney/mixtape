@@ -128,7 +128,19 @@ function TrackIcon({
         {icon ? (
           <img src={icon} alt="" className="track-list-icon" />
         ) : (
-          <span className="track-list-icon-placeholder">+</span>
+          <svg className="track-list-icon-placeholder" viewBox="0 0 20 20" fill="none">
+            <rect
+              x="0.5"
+              y="0.5"
+              width="19"
+              height="19"
+              rx="2"
+              stroke="currentColor"
+              strokeDasharray="3 2"
+            />
+            <line x1="10" y1="6" x2="10" y2="14" stroke="currentColor" strokeWidth="1.5" />
+            <line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
         )}
       </button>
       {open ? (
