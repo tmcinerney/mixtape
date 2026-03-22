@@ -17,7 +17,7 @@ export function IconPicker({ onSelect }: IconPickerProps) {
   }
 
   const filtered = search
-    ? icons.filter((icon) => icon.title.toLowerCase().includes(search.toLowerCase()))
+    ? icons.filter((icon) => (icon.title ?? '').toLowerCase().includes(search.toLowerCase()))
     : icons
 
   return (
@@ -32,12 +32,12 @@ export function IconPicker({ onSelect }: IconPickerProps) {
       <div className="icon-picker-grid">
         {filtered.map((icon) => (
           <button
-            key={icon.url}
+            key={icon.displayIconId}
             onClick={() => onSelect(icon)}
             className="icon-picker-btn"
             title={icon.title}
           >
-            <img src={icon.url} alt={icon.title} className="icon-picker-img" />
+            <img src={icon.url} alt={icon.title ?? ''} className="icon-picker-img" />
           </button>
         ))}
       </div>
