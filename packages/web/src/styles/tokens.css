@@ -74,8 +74,8 @@
 
 /* AIDEV-NOTE: Dark mode — overrides light values via data-theme attribute set by useTheme hook */
 [data-theme='dark'] {
-  --color-primary: #e8654b;
-  --color-primary-hover: #f07a63;
+  --color-primary: #f07a63;
+  --color-primary-hover: #f5917e;
   --color-background: #1c1c19;
   --color-surface: #2e2f2d;
   --color-text-primary: #f8f5f0;
