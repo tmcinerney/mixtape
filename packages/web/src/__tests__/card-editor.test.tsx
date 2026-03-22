@@ -168,8 +168,12 @@ describe('CardEditor', () => {
 
     await screen.findByDisplayValue('Chapter One')
 
+    // AIDEV-NOTE: Two-click delete — first click shows "Delete?", second confirms
     const deleteButtons = screen.getAllByRole('button', { name: /delete track/i })
     await userEvent.click(deleteButtons[0]!)
+
+    const confirmBtn = screen.getByRole('button', { name: /confirm delete/i })
+    await userEvent.click(confirmBtn)
 
     expect(screen.queryByDisplayValue('Chapter One')).not.toBeInTheDocument()
     expect(screen.getByDisplayValue('Chapter Two')).toBeInTheDocument()

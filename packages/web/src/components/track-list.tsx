@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -66,14 +67,40 @@ function SortableTrack({ track, index, onDelete, onTitleChange }: SortableTrackP
         aria-label="Track title"
         className="track-list-title-input"
       />
-      <button
-        onClick={() => onDelete(index)}
-        aria-label="Delete track"
-        className="track-list-delete-btn"
-      >
-        ✕
-      </button>
+      <DeleteButton onConfirm={() => onDelete(index)} />
     </div>
+  )
+}
+
+// AIDEV-NOTE: Two-click delete — first click shows "confirm?", auto-resets after 3s.
+function DeleteButton({ onConfirm }: { onConfirm: () => void }) {
+  const [confirming, setConfirming] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleClick = useCallback(() => {
+    if (confirming) {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      onConfirm()
+    } else {
+      setConfirming(true)
+      timerRef.current = setTimeout(() => setConfirming(false), 3000)
+    }
+  }, [confirming, onConfirm])
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
+
+  return (
+    <button
+      onClick={handleClick}
+      aria-label={confirming ? 'Confirm delete' : 'Delete track'}
+      className={`track-list-delete-btn ${confirming ? 'track-list-delete-btn--confirm' : ''}`}
+    >
+      {confirming ? 'Delete?' : '✕'}
+    </button>
   )
 }
 

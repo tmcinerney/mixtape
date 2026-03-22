@@ -71,3 +71,17 @@
   color: var(--color-error);
   background-color: var(--color-surface);
 }
+
+.track-list-delete-btn--confirm {
+  color: white;
+  background-color: var(--color-error);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.track-list-delete-btn--confirm:hover {
+  color: white;
+  background-color: var(--color-error);
+  opacity: 0.9;
+}
