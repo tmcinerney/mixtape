@@ -126,7 +126,41 @@ function Header() {
           onClick={cycleTheme}
           aria-label={`Theme: ${preference} (click to change)`}
         >
-          {preference === 'light' ? '☀' : preference === 'dark' ? '☽' : '⚙'}
+          {/* AIDEV-NOTE: SVGs instead of emoji for consistent centering across platforms */}
+          {preference === 'light' ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="8" cy="8" r="3.5" />
+              <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <line x1="8" y1="0.5" x2="8" y2="2.5" />
+                <line x1="8" y1="13.5" x2="8" y2="15.5" />
+                <line x1="0.5" y1="8" x2="2.5" y2="8" />
+                <line x1="13.5" y1="8" x2="15.5" y2="8" />
+                <line x1="2.7" y1="2.7" x2="4.1" y2="4.1" />
+                <line x1="11.9" y1="11.9" x2="13.3" y2="13.3" />
+                <line x1="2.7" y1="13.3" x2="4.1" y2="11.9" />
+                <line x1="11.9" y1="4.1" x2="13.3" y2="2.7" />
+              </g>
+            </svg>
+          ) : preference === 'dark' ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M6.2 1A7 7 0 0 0 15 9.8 7 7 0 1 1 6.2 1Z" />
+            </svg>
+          ) : (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="1.5" y="2" width="13" height="9" rx="1.5" />
+              <line x1="5.5" y1="14" x2="10.5" y2="14" />
+              <line x1="8" y1="11" x2="8" y2="14" />
+            </svg>
+          )}
         </button>
         {isAuthenticated ? <AvatarMenu /> : null}
       </div>
