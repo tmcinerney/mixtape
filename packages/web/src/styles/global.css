@@ -21,15 +21,6 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* AIDEV-NOTE: Smooth transition for dark mode toggle — covers bg, color, and border */
-html,
-body,
-#root {
-  transition:
-    background-color var(--duration-slow) var(--easing-smooth),
-    color var(--duration-slow) var(--easing-smooth);
-}
-
 body {
   min-height: 100vh;
   color: var(--color-text-primary);
