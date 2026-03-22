@@ -22,6 +22,7 @@ export function CardEditor() {
     saveError,
     error,
     handleTitleChange,
+    handleIconChange,
     handleDelete,
     retry,
   } = useCardEditor(cardId)
@@ -102,6 +103,7 @@ export function CardEditor() {
           onReorder={setTracks}
           onDelete={handleDelete}
           onTitleChange={handleTitleChange}
+          onIconChange={handleIconChange}
         />
 
         <div className="card-editor-actions">

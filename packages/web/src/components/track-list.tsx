@@ -16,6 +16,8 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Track } from '../types/yoto'
+import type { DisplayIcon } from '@yotoplay/yoto-sdk'
+import { IconPicker } from './icon-picker'
 import '../styles/track-list.css'
 
 export type { Track }
@@ -25,6 +27,7 @@ interface TrackListProps {
   onReorder: (tracks: Track[]) => void
   onDelete: (index: number) => void
   onTitleChange: (index: number, title: string) => void
+  onIconChange?: (index: number, iconUrl: string) => void
 }
 
 interface SortableTrackProps {
@@ -32,9 +35,16 @@ interface SortableTrackProps {
   index: number
   onDelete: (index: number) => void
   onTitleChange: (index: number, title: string) => void
+  onIconChange?: (index: number, iconUrl: string) => void
 }
 
-function SortableTrack({ track, index, onDelete, onTitleChange }: SortableTrackProps) {
+function SortableTrack({
+  track,
+  index,
+  onDelete,
+  onTitleChange,
+  onIconChange,
+}: SortableTrackProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: track.key,
   })
@@ -57,6 +67,10 @@ function SortableTrack({ track, index, onDelete, onTitleChange }: SortableTrackP
         ⠿
       </button>
       <span className="track-list-number">{index + 1}</span>
+      <TrackIcon
+        {...(track.icon !== undefined ? { icon: track.icon } : {})}
+        {...(onIconChange ? { onSelect: (url: string) => onIconChange(index, url) } : {})}
+      />
       <input
         type="text"
         value={track.title}
@@ -68,6 +82,57 @@ function SortableTrack({ track, index, onDelete, onTitleChange }: SortableTrackP
         className="track-list-title-input"
       />
       <DeleteButton onConfirm={() => onDelete(index)} />
+    </div>
+  )
+}
+
+// AIDEV-NOTE: Track icon — shows current icon or a placeholder. Click opens icon picker popover.
+function TrackIcon({ icon, onSelect }: { icon?: string; onSelect?: (url: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  if (!onSelect) {
+    // Read-only — just show the icon
+    return icon ? (
+      <img src={icon} alt="" className="track-list-icon" />
+    ) : (
+      <span className="track-list-icon-placeholder" />
+    )
+  }
+
+  return (
+    <div className="track-list-icon-wrapper" ref={ref}>
+      <button
+        className="track-list-icon-btn"
+        onClick={() => setOpen(!open)}
+        aria-label="Change track icon"
+      >
+        {icon ? (
+          <img src={icon} alt="" className="track-list-icon" />
+        ) : (
+          <span className="track-list-icon-placeholder">+</span>
+        )}
+      </button>
+      {open ? (
+        <div className="track-list-icon-popover">
+          <IconPicker
+            onSelect={(selected: DisplayIcon) => {
+              onSelect(selected.url)
+              setOpen(false)
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -104,7 +169,13 @@ function DeleteButton({ onConfirm }: { onConfirm: () => void }) {
   )
 }
 
-export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackListProps) {
+export function TrackList({
+  tracks,
+  onReorder,
+  onDelete,
+  onTitleChange,
+  onIconChange,
+}: TrackListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -136,6 +207,7 @@ export function TrackList({ tracks, onReorder, onDelete, onTitleChange }: TrackL
               index={i}
               onDelete={onDelete}
               onTitleChange={onTitleChange}
+              {...(onIconChange ? { onIconChange } : {})}
             />
           ))}
         </div>

@@ -2,7 +2,7 @@
 // shapes returned by the Yoto SDK after it unwraps raw API responses.
 // All card/chapter/track code should import from here — not define inline.
 
-/** A single audio track within a chapter. */
+/** A single audio track within a chapter (flattened for the UI). */
 export interface Track {
   key: string
   trackUrl: string
@@ -12,6 +12,8 @@ export interface Track {
   title?: string
   duration?: number
   overlayLabel?: string
+  /** Chapter display icon URL (from chapter.display.icon16x16) */
+  icon?: string
   /** Forward-compat: preserve unknown fields from the SDK/API. */
   [k: string]: unknown
 }

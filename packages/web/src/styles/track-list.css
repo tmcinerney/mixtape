@@ -48,6 +48,63 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Track icon — small clickable icon between number and title */
+.track-list-icon-wrapper {
+  position: relative;
+}
+
+.track-list-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.track-list-icon-btn:hover {
+  background-color: var(--color-surface);
+}
+
+.track-list-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.track-list-icon-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  border: 1px dashed var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+}
+
+.track-list-icon-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
 .track-list-title-input {
   flex: 1;
   padding: var(--space-xs) var(--space-sm);
