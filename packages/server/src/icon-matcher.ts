@@ -1,4 +1,11 @@
-import { pipeline } from '@huggingface/transformers'
+// AIDEV-NOTE: Dynamic import to handle CJS/ESM interop with @huggingface/transformers.
+// The package exports pipeline on `default` when loaded via dynamic import in tsx.
+async function loadPipeline() {
+  const mod = await import('@huggingface/transformers')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const resolved = (mod as any).default ?? mod
+  return resolved.pipeline as (...args: unknown[]) => Promise<unknown>
+}
 
 // AIDEV-NOTE: Semantic icon matching using local embeddings.
 // Uses all-MiniLM-L6-v2 (~90MB) for text embeddings. The model is downloaded
@@ -34,7 +41,8 @@ let cachedVectors: number[][] = []
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getExtractor(): Promise<any> {
   if (!extractor) {
-    extractor = await pipeline('feature-extraction', MODEL_NAME, {
+    const pipelineFn = await loadPipeline()
+    extractor = await pipelineFn('feature-extraction', MODEL_NAME, {
       dtype: 'fp32',
     })
   }
