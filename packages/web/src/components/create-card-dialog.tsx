@@ -79,6 +79,7 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
                   setIcon(selected)
                   setShowIconPicker(false)
                 }}
+                {...(title.trim() ? { trackTitle: title.trim() } : {})}
               />
             </div>
           ) : null}

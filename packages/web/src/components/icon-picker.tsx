@@ -21,22 +21,33 @@ export function IconPicker({ onSelect, trackTitle }: IconPickerProps) {
   const [suggesting, setSuggesting] = useState(false)
 
   const handleAutoMatch = useCallback(async () => {
-    if (!trackTitle || !icons) return
+    if (!icons || icons.length === 0) return
+
+    // AIDEV-NOTE: If there's a track title, use semantic search. Otherwise pick random.
+    if (!trackTitle) {
+      const randomIcon = icons[Math.floor(Math.random() * icons.length)]!
+      onSelect(randomIcon)
+      return
+    }
 
     setSuggesting(true)
     try {
       const token = await getAccessTokenSilently()
       const match = await suggestIcon(trackTitle, token)
       if (match) {
-        // Find the full DisplayIcon from our loaded list
         const icon = icons.find((i) => i.mediaId === match.mediaId)
         if (icon) {
           onSelect(icon)
           return
         }
       }
+      // AI match failed — fall back to random
+      const randomIcon = icons[Math.floor(Math.random() * icons.length)]!
+      onSelect(randomIcon)
     } catch {
-      // Fall through — auto-match failed silently
+      // API error — fall back to random
+      const randomIcon = icons[Math.floor(Math.random() * icons.length)]!
+      onSelect(randomIcon)
     } finally {
       setSuggesting(false)
     }
@@ -60,17 +71,15 @@ export function IconPicker({ onSelect, trackTitle }: IconPickerProps) {
           placeholder="Search icons..."
           className="icon-picker-search"
         />
-        {trackTitle ? (
-          <button
-            className="icon-picker-auto-btn"
-            onClick={handleAutoMatch}
-            disabled={suggesting}
-            title={`Find icon for "${trackTitle}"`}
-            aria-label="Auto-match icon"
-          >
-            {suggesting ? '...' : '✨'}
-          </button>
-        ) : null}
+        <button
+          className="icon-picker-auto-btn"
+          onClick={handleAutoMatch}
+          disabled={suggesting}
+          title={trackTitle ? `Find icon for "${trackTitle}"` : 'Pick a random icon'}
+          aria-label={trackTitle ? 'Auto-match icon' : 'Random icon'}
+        >
+          {suggesting ? '...' : '✨'}
+        </button>
       </div>
       <div className="icon-picker-grid">
         {filtered.map((icon) => (
