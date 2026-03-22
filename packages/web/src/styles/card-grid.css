@@ -107,22 +107,21 @@
   font-weight: var(--font-weight-regular);
 }
 
-/* Responsive — tablet */
-@media (max-width: 768px) {
+/* Responsive — tablet and below: 2-column grid with larger cards */
+@media (max-width: 840px) {
   .card-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-md);
   }
 }
 
-/* Responsive — phone: compact 2-column grid */
+/* Responsive — phone */
 @media (max-width: 480px) {
   .card-grid-section-header {
     margin-bottom: var(--space-sm);
   }
 
   .card-grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-sm);
   }
 
