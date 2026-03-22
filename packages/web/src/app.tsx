@@ -58,7 +58,12 @@ function AvatarMenu() {
             role="menuitem"
             onClick={() => {
               close()
-              logout({ logoutParams: { returnTo: window.location.origin } })
+              // AIDEV-NOTE: Use openUrl: false to avoid hitting Auth0's /v2/logout
+              // endpoint — Yoto's tenant doesn't have our URLs in Allowed Logout URLs.
+              // This clears the local session only; the Auth0 SSO session persists
+              // so re-login is instant (no password prompt).
+              logout({ openUrl: false })
+              window.location.href = '/'
             }}
           >
             Log out

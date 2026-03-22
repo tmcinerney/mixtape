@@ -19,6 +19,9 @@ html {
   background-color: var(--color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* AIDEV-NOTE: Prevent scrollbar appearance from shifting layout */
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
 }
 
 body {
