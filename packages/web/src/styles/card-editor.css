@@ -18,16 +18,9 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-lg);
-  cursor: pointer;
   position: relative;
   overflow: hidden;
-  border: none;
   width: 100%;
-  transition: transform var(--duration-fast) var(--easing-spring);
-}
-
-.card-editor-artwork:hover {
-  transform: scale(1.02);
 }
 
 .card-editor-artwork-cover {
@@ -43,36 +36,6 @@
   width: 80px;
   height: 80px;
   object-fit: contain;
-}
-
-/* Hover overlay — shows "Change" hint */
-.card-editor-artwork-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  color: white;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  border-radius: var(--radius-lg);
-  opacity: 0;
-  transition: opacity var(--duration-normal) var(--easing-smooth);
-}
-
-.card-editor-artwork:hover .card-editor-artwork-overlay {
-  opacity: 1;
-}
-
-.card-editor-icon-picker {
-  margin-top: var(--space-sm);
-  max-height: 300px;
-  overflow-y: auto;
-  background-color: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-sm);
 }
 
 /* Right column: track list */
