@@ -3,6 +3,14 @@
   max-width: 100%;
 }
 
+/* AIDEV-NOTE: When logged out (no cards), center content vertically */
+.landing--centered {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .landing-hero {
   text-align: center;
   margin-bottom: var(--space-2xl);
@@ -36,4 +44,15 @@
   text-align: center;
   padding: var(--space-xl);
   color: var(--color-text-secondary);
+}
+
+/* Responsive — phone */
+@media (max-width: 480px) {
+  .landing-heading {
+    margin-bottom: var(--space-md);
+  }
+
+  .landing-cards-section {
+    margin-top: var(--space-lg);
+  }
 }

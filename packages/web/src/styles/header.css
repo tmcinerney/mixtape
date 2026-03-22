@@ -62,6 +62,20 @@
   object-fit: cover;
 }
 
+/* Sign-in pill button */
+.header-sign-in {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.header-sign-in:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
 /* Avatar dropdown menu */
 .header-avatar-menu {
   position: relative;

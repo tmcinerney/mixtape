@@ -107,10 +107,45 @@
   font-weight: var(--font-weight-regular);
 }
 
-/* Responsive — phone: smaller cards to fit 2 columns */
-@media (max-width: 480px) {
+/* Responsive — tablet */
+@media (max-width: 768px) {
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: var(--space-md);
+  }
+}
+
+/* Responsive — phone: horizontal scroll strip */
+@media (max-width: 480px) {
+  .card-grid-section-header {
+    margin-bottom: var(--space-sm);
+  }
+
+  .card-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: var(--space-sm);
+    padding-bottom: var(--space-sm);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .card-grid-item,
+  .card-grid-add {
+    flex: 0 0 120px;
+    scroll-snap-align: start;
+    aspect-ratio: 2 / 3;
+  }
+
+  .card-grid-title {
+    font-size: var(--font-size-xs);
+  }
+
+  .card-grid-add {
+    font-size: var(--font-size-xs);
+  }
+
+  .card-grid-add-icon {
+    font-size: var(--font-size-lg);
   }
 }

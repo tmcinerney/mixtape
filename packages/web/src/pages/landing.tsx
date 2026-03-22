@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth0 } from '@auth0/auth0-react'
 import { useUploadFlow } from '../hooks/use-upload-flow'
 import { useAddTrack } from '../hooks/use-add-track'
 import { UrlInput } from '../components/url-input'
@@ -12,6 +13,7 @@ import { CreateCardDialog } from '../components/create-card-dialog'
 import '../styles/landing.css'
 
 export function LandingPage() {
+  const { isAuthenticated } = useAuth0()
   const { addTrack } = useAddTrack()
   const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)
@@ -34,7 +36,7 @@ export function LandingPage() {
   const flow = useUploadFlow({ onTrackReady: handleTrackReady })
 
   return (
-    <div className="landing">
+    <div className={`landing${!isAuthenticated ? ' landing--centered' : ''}`}>
       <div className="landing-hero">
         <h1 className="landing-heading">
           Make <span className="accent">mixtapes</span> for your{' '}

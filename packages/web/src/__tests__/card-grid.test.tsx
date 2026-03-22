@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -46,38 +45,20 @@ describe('CardGrid', () => {
     })
   })
 
-  it('shows sign-in message when not authenticated', () => {
+  it('renders nothing when not authenticated', () => {
     mockUseAuth0.mockReturnValue({
       isAuthenticated: false,
       loginWithRedirect: mockLoginWithRedirect,
     })
     mockUseYoto.mockReturnValue({ sdk: null, isReady: false })
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <CardGrid />
       </MemoryRouter>,
     )
 
-    expect(screen.getByText(/sign in to see your cards/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
-  })
-
-  it('calls loginWithRedirect when sign-in button is clicked', async () => {
-    mockUseAuth0.mockReturnValue({
-      isAuthenticated: false,
-      loginWithRedirect: mockLoginWithRedirect,
-    })
-    mockUseYoto.mockReturnValue({ sdk: null, isReady: false })
-
-    render(
-      <MemoryRouter>
-        <CardGrid />
-      </MemoryRouter>,
-    )
-
-    await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
-    expect(mockLoginWithRedirect).toHaveBeenCalled()
+    expect(container.innerHTML).toBe('')
   })
 
   it('renders cards from SDK data', async () => {

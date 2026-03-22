@@ -71,7 +71,7 @@ function AvatarMenu() {
 
 function Header() {
   const { preference, cycleTheme } = useTheme()
-  const { isAuthenticated } = useAuth0()
+  const { isAuthenticated, loginWithRedirect } = useAuth0()
 
   return (
     <header className="header">
@@ -162,7 +162,13 @@ function Header() {
             </svg>
           )}
         </button>
-        {isAuthenticated ? <AvatarMenu /> : null}
+        {isAuthenticated ? (
+          <AvatarMenu />
+        ) : (
+          <button className="header-sign-in" onClick={() => loginWithRedirect()}>
+            Sign in
+          </button>
+        )}
       </div>
     </header>
   )

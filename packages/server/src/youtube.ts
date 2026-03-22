@@ -67,6 +67,11 @@ export async function downloadAudio(
   return new Promise<DownloadResult>((resolve, reject) => {
     const proc = spawn('yt-dlp', args, { stdio: ['ignore', 'pipe', 'pipe'] })
 
+    // AIDEV-NOTE: Handle spawn errors (e.g. ENOENT when yt-dlp not installed)
+    proc.on('error', (err) => {
+      reject(new PipelineError(`Failed to spawn yt-dlp: ${err.message}`, 'DOWNLOAD_FAILED'))
+    })
+
     proc.stderr.on('data', (chunk: Buffer) => {
       const line = chunk.toString()
       stderrOutput += line

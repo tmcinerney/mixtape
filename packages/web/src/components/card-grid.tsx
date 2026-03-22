@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
+// AIDEV-NOTE: loginWithRedirect removed — sign-in now handled by header button
+// and upload flow hook (use-upload-flow.ts line 66-72)
 import { useYotoQuery } from '../hooks/use-yoto-query'
 import { ErrorState } from './error-state'
 import { CardGridSkeleton } from './skeleton'
@@ -29,7 +31,7 @@ function getCardImage(card: CardWithMetadata): string | undefined {
 }
 
 export function CardGrid({ onAddPlaylist }: CardGridProps) {
-  const { isAuthenticated, loginWithRedirect } = useAuth0()
+  const { isAuthenticated } = useAuth0()
   const {
     data: cards,
     loading,
@@ -37,15 +39,10 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
     refetch,
   } = useYotoQuery<CardWithMetadata[]>((sdk) => sdk.content.getMyCards())
 
+  // AIDEV-NOTE: When logged out, hide cards section entirely. Sign-in is
+  // handled by the header button or triggered when user submits a URL.
   if (!isAuthenticated) {
-    return (
-      <div className="card-grid-sign-in">
-        <p>Sign in to see your cards</p>
-        <button className="btn-primary" onClick={() => loginWithRedirect()}>
-          Sign in
-        </button>
-      </div>
-    )
+    return null
   }
 
   if (error) {

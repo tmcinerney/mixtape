@@ -19,9 +19,15 @@
   box-shadow: 0 0 0 2px var(--color-primary);
 }
 
-/* Responsive — phone: stack input + button vertically */
+/* Responsive — phone: stack + scale down */
 @media (max-width: 480px) {
   .url-form {
     flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .url-input {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
   }
 }
