@@ -90,3 +90,12 @@
   justify-content: flex-end;
   margin-top: var(--space-lg);
 }
+
+/* Responsive — phone: full-width dialog */
+@media (max-width: 480px) {
+  .dialog-panel {
+    min-width: 0;
+    width: calc(100vw - 2rem);
+    max-width: 480px;
+  }
+}

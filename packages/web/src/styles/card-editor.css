@@ -83,3 +83,21 @@
   text-align: center;
   padding: var(--space-2xl);
 }
+
+/* Responsive — tablet: stack to single column */
+@media (max-width: 768px) {
+  .card-editor {
+    flex-direction: column;
+  }
+
+  .card-editor-preview {
+    flex: none;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  .card-editor-tracks {
+    min-width: 0;
+  }
+}

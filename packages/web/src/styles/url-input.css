@@ -18,3 +18,10 @@
 .url-input:focus {
   box-shadow: 0 0 0 2px var(--color-primary);
 }
+
+/* Responsive — phone: stack input + button vertically */
+@media (max-width: 480px) {
+  .url-form {
+    flex-direction: column;
+  }
+}

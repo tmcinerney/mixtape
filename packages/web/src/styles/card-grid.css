@@ -106,3 +106,11 @@
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-regular);
 }
+
+/* Responsive — phone: smaller cards to fit 2 columns */
+@media (max-width: 480px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-md);
+  }
+}

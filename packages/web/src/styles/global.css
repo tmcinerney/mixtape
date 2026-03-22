@@ -208,3 +208,25 @@ img {
   margin: 0 auto;
   padding: var(--space-xl) var(--space-lg);
 }
+
+/* Responsive — tablet */
+@media (max-width: 768px) {
+  h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .app-main {
+    padding: var(--space-lg) var(--space-md);
+  }
+}
+
+/* Responsive — phone */
+@media (max-width: 480px) {
+  h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .app-main {
+    padding: var(--space-md) var(--space-sm);
+  }
+}

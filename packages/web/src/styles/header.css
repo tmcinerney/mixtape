@@ -141,3 +141,14 @@
 .header-dropdown-item:hover {
   background-color: var(--color-stripe);
 }
+
+/* Responsive — tablet */
+@media (max-width: 768px) {
+  .header {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .header-actions {
+    gap: var(--space-sm);
+  }
+}
