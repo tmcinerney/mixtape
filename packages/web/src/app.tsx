@@ -39,7 +39,8 @@ function AvatarMenu() {
   return (
     <div className="header-avatar-menu" ref={menuRef}>
       <button className="header-avatar-trigger" onClick={() => setOpen(!open)} aria-expanded={open}>
-        {user.picture ? (
+        {/* AIDEV-NOTE: Skip Gravatar defaults (green letter circle) — use our own styled initial */}
+        {user.picture && !user.picture.includes('gravatar.com') ? (
           <img src={user.picture} alt={user.name ?? 'User avatar'} className="header-avatar" />
         ) : (
           <span className="header-avatar-fallback">{user.name?.[0] ?? '?'}</span>
