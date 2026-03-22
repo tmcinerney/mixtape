@@ -122,40 +122,49 @@ export function useCardEditor(cardId: string | undefined): UseCardEditorResult {
     setTracks(chaptersToTracks(chapters))
   }, [card])
 
-  const save = useCallback(async () => {
-    if (!sdk || !card || !cardId) return
+  // AIDEV-NOTE: save accepts optional overrides so callers can pass the new state
+  // directly without waiting for React to re-render and update the refs.
+  const save = useCallback(
+    async (overrides?: { tracks?: Track[]; title?: string }) => {
+      if (!sdk || !card || !cardId) return
 
-    setSaveStatus('saving')
-    setSaveError(null)
+      const saveTracks = overrides?.tracks ?? tracksRef.current
+      const saveTitle = overrides?.title ?? titleRef.current
 
-    try {
-      const payload = {
-        ...card,
-        cardId,
-        title: titleRef.current,
-        content: {
-          ...card.content,
-          chapters: tracksToChapters(tracksRef.current, originalChaptersRef.current),
-        },
+      setSaveStatus('saving')
+      setSaveError(null)
+
+      try {
+        const payload = {
+          ...card,
+          cardId,
+          title: saveTitle,
+          content: {
+            ...card.content,
+            chapters: tracksToChapters(saveTracks, originalChaptersRef.current),
+          },
+        }
+        await sdk.content.updateCard(
+          payload as unknown as Parameters<typeof sdk.content.updateCard>[0],
+        )
+        setSaveStatus('saved')
+        savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), SAVED_DISPLAY_MS)
+      } catch (err) {
+        setSaveStatus('error')
+        setSaveError(err instanceof Error ? err.message : 'Failed to save')
       }
-      await sdk.content.updateCard(
-        payload as unknown as Parameters<typeof sdk.content.updateCard>[0],
-      )
-      setSaveStatus('saved')
-      // Reset to idle after a brief "Saved" display
-      savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), SAVED_DISPLAY_MS)
-    } catch (err) {
-      setSaveStatus('error')
-      setSaveError(err instanceof Error ? err.message : 'Failed to save')
-    }
-  }, [sdk, card, cardId])
+    },
+    [sdk, card, cardId],
+  )
 
-  const saveNow = useCallback(() => {
-    // Clear any pending debounce
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
-    save()
-  }, [save])
+  const saveNow = useCallback(
+    (overrides?: { tracks?: Track[]; title?: string }) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+      save(overrides)
+    },
+    [save],
+  )
 
   const saveLater = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -181,22 +190,21 @@ export function useCardEditor(cardId: string | undefined): UseCardEditorResult {
 
   const handleIconChange = useCallback(
     (index: number, iconRef: string, iconUrl: string) => {
-      setTracks((prev) => prev.map((t, i) => (i === index ? { ...t, iconRef, iconUrl } : t)))
-      // Discrete action — save immediately
-      setTimeout(() => saveNow(), 0)
+      const updated = tracksRef.current.map((t, i) =>
+        i === index ? { ...t, iconRef, iconUrl } : t,
+      )
+      setTracks(updated)
+      saveNow({ tracks: updated })
     },
     [saveNow],
   )
 
   const handleDelete = useCallback(
     (index: number) => {
-      setTracks((prev) => {
-        const next = prev.filter((_, i) => i !== index)
-        return next.map((t, i) => ({ ...t, key: String(i).padStart(2, '0') }))
-      })
-      // AIDEV-NOTE: Save immediately on delete — discrete, irreversible action
-      // Use setTimeout(0) so the state update from setTracks is flushed first
-      setTimeout(() => saveNow(), 0)
+      const filtered = tracksRef.current.filter((_, i) => i !== index)
+      const rekeyed = filtered.map((t, i) => ({ ...t, key: String(i).padStart(2, '0') }))
+      setTracks(rekeyed)
+      saveNow({ tracks: rekeyed })
     },
     [saveNow],
   )
@@ -213,8 +221,7 @@ export function useCardEditor(cardId: string | undefined): UseCardEditorResult {
   const setTracksWithSave = useCallback(
     (newTracks: Track[]) => {
       setTracks(newTracks)
-      // AIDEV-NOTE: Immediate save on reorder (discrete action from DnD)
-      setTimeout(() => saveNow(), 0)
+      saveNow({ tracks: newTracks })
     },
     [saveNow],
   )
