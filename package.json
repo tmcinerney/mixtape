@@ -12,7 +12,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "precommit": "lint-staged",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

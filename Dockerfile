@@ -31,7 +31,8 @@ COPY packages/shared/ packages/shared/
 COPY packages/server/ packages/server/
 COPY tsconfig.base.json tsconfig.json ./
 
-RUN pnpm --filter shared build && pnpm --filter server build
+# AIDEV-NOTE: tsup bundles @mixtape/shared via noExternal, no need to build shared first
+RUN pnpm --filter server build
 
 # ── Stage 4: Production runtime ───────────────────────────────────────────────
 FROM node:22-slim AS runtime
@@ -57,24 +58,12 @@ WORKDIR /app
 
 # Copy workspace config and package manifests
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY packages/shared/package.json packages/shared/
 COPY packages/server/package.json packages/server/
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod
 
-# Copy built shared (dist + src for type resolution)
-COPY --from=build-server /app/packages/shared/dist/ packages/shared/dist/
-COPY --from=build-server /app/packages/shared/src/ packages/shared/src/
-
-# AIDEV-NOTE: Patch shared exports to resolve to compiled JS in production.
-# In dev, exports point to ./src/index.ts (for tsx/vite), but Node needs .js.
-RUN node -e " \
-  const pkg = JSON.parse(require('fs').readFileSync('packages/shared/package.json','utf8')); \
-  pkg.exports['.'].default = './dist/index.js'; \
-  require('fs').writeFileSync('packages/shared/package.json', JSON.stringify(pkg, null, 2) + '\n'); \
-"
-
+# AIDEV-NOTE: tsup bundles shared into server — no shared dist/src needed at runtime
 # Copy built server
 COPY --from=build-server /app/packages/server/dist/ packages/server/dist/
 
@@ -83,7 +72,7 @@ COPY --from=build-web /app/packages/web/dist/ packages/web/dist/
 
 # AIDEV-NOTE: Pre-download the embedding model for semantic icon matching (~90MB).
 # Cached to ~/.cache/huggingface so it's baked into the image.
-RUN node -e " \
+RUN cd packages/server && node -e " \
   import('@huggingface/transformers').then(m => \
     m.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { dtype: 'fp32' }) \
   ).then(() => console.log('Embedding model downloaded'))"
