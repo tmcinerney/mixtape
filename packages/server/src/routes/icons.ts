@@ -30,7 +30,7 @@ app.get('/api/suggest-icon', async (c) => {
     }
 
     try {
-      const res = await fetch(`${YOTO_API_BASE}/user/icons/displayIcon`, {
+      const res = await fetch(`${YOTO_API_BASE}/media/displayIcons/user/yoto`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
