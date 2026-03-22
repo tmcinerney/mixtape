@@ -50,7 +50,7 @@
 .card-grid-title {
   position: relative;
   z-index: 1;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   text-align: center;
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
@@ -66,16 +66,17 @@
   border-radius: var(--radius-lg);
   background: transparent;
   cursor: pointer;
-  opacity: 0.5;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   transition:
-    opacity var(--duration-normal) var(--easing-smooth),
+    border-color var(--duration-normal) var(--easing-smooth),
+    color var(--duration-normal) var(--easing-smooth),
     transform var(--duration-normal) var(--easing-spring);
 }
 
 .card-grid-add:hover {
-  opacity: 0.8;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
   transform: scale(1.02);
 }
 
