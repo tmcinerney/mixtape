@@ -9,7 +9,13 @@ vi.mock('../auth/yoto-provider', () => ({
   useYoto: () => mockUseYoto(),
 }))
 
+// AIDEV-NOTE: Mock useAuth0 since icon-picker now imports it for the auto-match feature
+vi.mock('@auth0/auth0-react', () => ({
+  useAuth0: () => ({ getAccessTokenSilently: vi.fn() }),
+}))
+
 import { IconPicker } from '../components/icon-picker'
+import { _resetIconCache } from '../hooks/use-icons'
 
 // AIDEV-NOTE: Matches SDK DisplayIcon shape — uses title (not name), no category
 const mockIcons = [
@@ -69,6 +75,7 @@ describe('IconPicker', () => {
   const onSelect = vi.fn()
 
   beforeEach(() => {
+    _resetIconCache()
     mockGetDisplayIcons.mockReset()
     onSelect.mockReset()
     mockUseYoto.mockReturnValue({

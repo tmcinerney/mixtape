@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import type { DisplayIcon } from '@yotoplay/yoto-sdk'
-import { useYotoQuery } from '../hooks/use-yoto-query'
+import { useIcons } from '../hooks/use-icons'
 import { suggestIcon } from '../api/client'
 import '../styles/icon-picker.css'
 
@@ -15,7 +15,7 @@ interface IconPickerProps {
 // The optional trackTitle enables the "auto-match" button which uses semantic search
 // via local embeddings on the server to find the best icon for the track.
 export function IconPicker({ onSelect, trackTitle }: IconPickerProps) {
-  const { data: icons, loading } = useYotoQuery<DisplayIcon[]>((sdk) => sdk.icons.getDisplayIcons())
+  const { icons, loading } = useIcons()
   const { getAccessTokenSilently } = useAuth0()
   const [search, setSearch] = useState('')
   const [suggesting, setSuggesting] = useState(false)
