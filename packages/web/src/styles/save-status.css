@@ -1,0 +1,49 @@
+/* AIDEV-NOTE: Auto-save status indicator — fades in/out based on state */
+.save-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: opacity var(--duration-normal) var(--easing-smooth);
+}
+
+.save-status--saving {
+  color: var(--color-text-secondary);
+}
+
+.save-status--saved {
+  color: var(--color-success);
+  animation: save-status-fade 2s ease-in-out;
+}
+
+.save-status--error {
+  color: var(--color-error);
+  background-color: var(--color-stripe);
+  padding: var(--space-xs) var(--space-md);
+}
+
+@keyframes save-status-fade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.save-status-text {
+  font-weight: var(--font-weight-medium);
+}
+
+.save-status-retry {
+  font-size: var(--font-size-xs);
+  color: var(--color-link);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}

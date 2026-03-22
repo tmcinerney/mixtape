@@ -151,8 +151,7 @@ describe('CardEditor', () => {
     await userEvent.clear(titleInput)
     await userEvent.type(titleInput, 'Updated Title')
 
-    await userEvent.click(screen.getByRole('button', { name: /save/i }))
-
+    // AIDEV-NOTE: Auto-save triggers after 1s debounce on title change
     await waitFor(() => {
       expect(mockUpdateCard).toHaveBeenCalledWith(
         expect.objectContaining({

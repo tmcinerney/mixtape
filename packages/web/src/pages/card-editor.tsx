@@ -1,14 +1,14 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useCardEditor } from '../hooks/use-card-editor'
 import { TrackList } from '../components/track-list'
 import { ErrorState } from '../components/error-state'
+import { SaveStatusIndicator } from '../components/save-status'
 import { Skeleton, TrackListSkeleton } from '../components/skeleton'
 import '../styles/card-editor.css'
 
 export function CardEditor() {
   const { cardId } = useParams<{ cardId: string }>()
-  const navigate = useNavigate()
   const { isAuthenticated, isLoading: authLoading, loginWithRedirect } = useAuth0()
 
   const {
@@ -18,11 +18,12 @@ export function CardEditor() {
     tracks,
     setTracks,
     loading,
-    saving,
+    saveStatus,
+    saveError,
     error,
     handleTitleChange,
     handleDelete,
-    handleSave,
+    retry,
   } = useCardEditor(cardId)
 
   if (authLoading) {
@@ -65,11 +66,6 @@ export function CardEditor() {
 
   const metadata = card.metadata as { icon?: string; color?: string }
 
-  const onSave = async () => {
-    await handleSave()
-    navigate('/')
-  }
-
   return (
     <div className="card-editor">
       {/* Left column: card preview */}
@@ -97,7 +93,10 @@ export function CardEditor() {
 
       {/* Right column: track list */}
       <div className="card-editor-tracks">
-        <h2>Tracks</h2>
+        <div className="card-editor-tracks-header">
+          <h2>Tracks</h2>
+          <SaveStatusIndicator status={saveStatus} error={saveError} onRetry={retry} />
+        </div>
         <TrackList
           tracks={tracks}
           onReorder={setTracks}
@@ -106,12 +105,9 @@ export function CardEditor() {
         />
 
         <div className="card-editor-actions">
-          <button className="btn-primary" onClick={onSave} disabled={saving} aria-label="Save">
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-          <button className="btn-ghost" onClick={() => navigate('/')} aria-label="Cancel">
-            Cancel
-          </button>
+          <Link to="/" className="btn-ghost card-editor-back">
+            Back
+          </Link>
         </div>
       </div>
     </div>

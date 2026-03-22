@@ -43,8 +43,15 @@
   min-width: 300px;
 }
 
-.card-editor-tracks h2 {
+.card-editor-tracks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: var(--space-md);
+}
+
+.card-editor-tracks-header h2 {
+  margin: 0;
 }
 
 .card-editor-actions {
