@@ -34,6 +34,19 @@
   border-radius: var(--radius-lg);
 }
 
+/* Gradient scrim behind the title for readability over cover images */
+.card-grid-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  pointer-events: none;
+}
+
 .card-grid-title {
   position: relative;
   z-index: 1;
@@ -41,7 +54,6 @@
   text-align: center;
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .card-grid-add {
