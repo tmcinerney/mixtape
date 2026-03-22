@@ -1,4 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+
+function useAppVersion() {
+  const [version, setVersion] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/health')
+      .then((r) => r.json())
+      .then((d) => setVersion(d.version))
+      .catch(() => {})
+  }, [])
+  return version
+}
 import { useRoutes, Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import { YotoProvider } from './auth/yoto-provider'
@@ -9,6 +20,7 @@ import './styles/footer.css'
 
 function AvatarMenu() {
   const { user, logout } = useAuth0()
+  const version = useAppVersion()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -52,6 +64,7 @@ function AvatarMenu() {
             <span className="header-dropdown-name">{user.name}</span>
             {user.email ? <span className="header-dropdown-email">{user.email}</span> : null}
           </div>
+          {version ? <span className="header-dropdown-version">v{version}</span> : null}
           <hr className="header-dropdown-divider" />
           <button
             className="header-dropdown-item"

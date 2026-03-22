@@ -5,8 +5,16 @@ import { jobRoutes } from './routes/jobs'
 import { iconRoutes } from './routes/icons'
 import { serveStatic } from './static'
 
-// AIDEV-NOTE: version placeholder until we wire up package.json reading
-const VERSION = '0.1.0'
+// AIDEV-NOTE: Read version from root package.json — bump on each release
+import { readFileSync } from 'node:fs'
+const VERSION = (() => {
+  try {
+    const pkg = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf-8'))
+    return pkg.version ?? 'dev'
+  } catch {
+    return 'dev'
+  }
+})()
 
 // AIDEV-NOTE: In production Docker image, web dist is copied to packages/web/dist
 // relative to the server's working directory. Resolve from cwd so it works in both
