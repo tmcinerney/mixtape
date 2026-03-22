@@ -81,6 +81,13 @@ COPY --from=build-server /app/packages/server/dist/ packages/server/dist/
 # Copy built web assets
 COPY --from=build-web /app/packages/web/dist/ packages/web/dist/
 
+# AIDEV-NOTE: Pre-download the embedding model for semantic icon matching (~90MB).
+# Cached to ~/.cache/huggingface so it's baked into the image.
+RUN node -e " \
+  import('@huggingface/transformers').then(m => \
+    m.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { dtype: 'fp32' }) \
+  ).then(() => console.log('Embedding model downloaded'))"
+
 ENV NODE_ENV=production
 EXPOSE 3001
 

@@ -72,6 +72,7 @@ function SortableTrack({
         {...(onIconChange
           ? { onSelect: (ref: string, url: string) => onIconChange(index, ref, url) }
           : {})}
+        {...(track.title !== undefined ? { trackTitle: track.title } : {})}
       />
       <input
         type="text"
@@ -92,9 +93,11 @@ function SortableTrack({
 function TrackIcon({
   icon,
   onSelect,
+  trackTitle,
 }: {
   icon?: string
   onSelect?: (ref: string, url: string) => void
+  trackTitle?: string
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -150,6 +153,7 @@ function TrackIcon({
               onSelect(`yoto:#${selected.mediaId}`, selected.url)
               setOpen(false)
             }}
+            {...(trackTitle !== undefined ? { trackTitle } : {})}
           />
         </div>
       ) : null}

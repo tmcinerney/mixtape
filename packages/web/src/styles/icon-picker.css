@@ -7,13 +7,45 @@
   margin: 0;
 }
 
-.icon-picker-search {
-  width: 100%;
-  padding: var(--space-sm) var(--space-md);
+.icon-picker-toolbar {
+  display: flex;
+  gap: var(--space-xs);
   margin-bottom: var(--space-sm);
+}
+
+.icon-picker-search {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-full);
   background-color: var(--color-surface);
   font-size: var(--font-size-sm);
+}
+
+.icon-picker-auto-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-normal) var(--easing-smooth),
+    transform var(--duration-fast) var(--easing-spring);
+  flex-shrink: 0;
+}
+
+.icon-picker-auto-btn:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+.icon-picker-auto-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 .icon-picker-grid {

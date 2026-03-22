@@ -129,3 +129,23 @@ export async function cancelJob(jobId: string, token: string): Promise<void> {
     throw new Error(`Failed to cancel job: ${res.status} ${res.statusText}`)
   }
 }
+
+export interface SuggestedIcon {
+  mediaId: string
+  ref: string
+  title: string
+  url: string
+  score: number
+}
+
+export async function suggestIcon(title: string, token: string): Promise<SuggestedIcon | null> {
+  const params = new URLSearchParams({ title })
+  const res = await fetch(`${API_BASE}/suggest-icon?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!res.ok) return null
+
+  const data = (await res.json()) as { matches: SuggestedIcon[] }
+  return data.matches[0] ?? null
+}
