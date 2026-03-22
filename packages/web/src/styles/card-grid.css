@@ -26,17 +26,22 @@
 }
 
 .card-grid-image {
-  width: 64px;
-  height: 64px;
-  margin-bottom: var(--space-md);
-  object-fit: contain;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
 }
 
 .card-grid-title {
+  position: relative;
+  z-index: 1;
   font-weight: var(--font-weight-semibold);
   text-align: center;
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .card-grid-add {

@@ -1,10 +1,19 @@
 import { Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
-import type { UserCard } from '@yotoplay/yoto-sdk'
 import { useYotoQuery } from '../hooks/use-yoto-query'
 import { ErrorState } from './error-state'
 import { CardGridSkeleton } from './skeleton'
 import '../styles/card-grid.css'
+
+// AIDEV-NOTE: The SDK's UserCard type only exposes top-level cover.imageS/M/L,
+// but the actual content/mine API response includes metadata.cover.imageL for
+// MYO cards. We use this extended type to access the real cover images.
+interface CardWithMetadata {
+  cardId: string
+  title: string
+  cover?: { imageS?: string; imageM?: string; imageL?: string }
+  metadata?: { cover?: { imageL?: string } }
+}
 
 interface CardGridProps {
   onAddPlaylist?: () => void
@@ -13,8 +22,12 @@ interface CardGridProps {
 // AIDEV-NOTE: Rotating card background colors per design spec
 const CARD_COLORS = ['#6366F1', '#14B8A6', '#F59E0B', '#22C55E', '#EC4899', '#8B5CF6']
 
-// AIDEV-NOTE: getMyCards() returns UserCard[] — a summary type with cardId, title, cover.
-// It does NOT include metadata/content. Full card data is loaded in the editor via getCard().
+function getCardImage(card: CardWithMetadata): string | undefined {
+  return (
+    card.cover?.imageL ?? card.cover?.imageM ?? card.cover?.imageS ?? card.metadata?.cover?.imageL
+  )
+}
+
 export function CardGrid({ onAddPlaylist }: CardGridProps) {
   const { isAuthenticated, loginWithRedirect } = useAuth0()
   const {
@@ -22,7 +35,7 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
     loading,
     error,
     refetch,
-  } = useYotoQuery<UserCard[]>((sdk) => sdk.content.getMyCards())
+  } = useYotoQuery<CardWithMetadata[]>((sdk) => sdk.content.getMyCards())
 
   if (!isAuthenticated) {
     return (
@@ -58,8 +71,8 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
             className="card-grid-item"
             style={{ backgroundColor: CARD_COLORS[index % CARD_COLORS.length] }}
           >
-            {card.cover?.imageS ? (
-              <img src={card.cover.imageS} alt="" className="card-grid-image" />
+            {getCardImage(card) ? (
+              <img src={getCardImage(card)} alt="" className="card-grid-image" />
             ) : null}
             <span className="card-grid-title">{card.title}</span>
           </Link>

@@ -1,13 +1,13 @@
-/* AIDEV-NOTE: Card editor — two-column layout per design spec */
+/* AIDEV-NOTE: Card editor — two-column layout, tightened UI */
 .card-editor {
   display: flex;
   gap: var(--space-xl);
   flex-wrap: wrap;
 }
 
-/* Left column: card artwork preview */
+/* Left column: card artwork — clickable to change icon */
 .card-editor-preview {
-  flex: 0 0 220px;
+  flex: 0 0 200px;
 }
 
 .card-editor-artwork {
@@ -18,23 +18,61 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-lg);
-  margin-bottom: var(--space-md);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  width: 100%;
+  transition: transform var(--duration-fast) var(--easing-spring);
+}
+
+.card-editor-artwork:hover {
+  transform: scale(1.02);
+}
+
+.card-editor-artwork-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
 }
 
 .card-editor-artwork-icon {
   width: 80px;
   height: 80px;
-  margin-bottom: var(--space-sm);
   object-fit: contain;
 }
 
-.card-editor-title-input {
-  width: 100%;
-  font-size: var(--font-size-lg);
+/* Hover overlay — shows "Change" hint */
+.card-editor-artwork-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-lg);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--easing-smooth);
+}
+
+.card-editor-artwork:hover .card-editor-artwork-overlay {
+  opacity: 1;
+}
+
+.card-editor-icon-picker {
+  margin-top: var(--space-sm);
+  max-height: 300px;
+  overflow-y: auto;
   background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-sm);
 }
 
 /* Right column: track list */
@@ -43,25 +81,38 @@
   min-width: 300px;
 }
 
+/* AIDEV-NOTE: Title is now the page heading — editable inline, replaces "Tracks" */
 .card-editor-tracks-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-sm);
   margin-bottom: var(--space-md);
 }
 
-.card-editor-tracks-header h2 {
-  margin: 0;
+.card-editor-title-input {
+  flex: 1;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+.card-editor-title-input:hover {
+  background-color: var(--color-stripe);
+}
+
+.card-editor-title-input:focus {
+  background-color: var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 .card-editor-actions {
   display: flex;
   gap: var(--space-sm);
   margin-top: var(--space-lg);
-}
-
-.card-editor-change-icon {
-  margin-top: var(--space-sm);
 }
 
 /* Auth prompt */

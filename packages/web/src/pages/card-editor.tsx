@@ -1,9 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
+import type { DisplayIcon } from '@yotoplay/yoto-sdk'
 import { useCardEditor } from '../hooks/use-card-editor'
 import { useIconResolver } from '../hooks/use-icon-resolver'
 import { TrackList } from '../components/track-list'
+import { IconPicker } from '../components/icon-picker'
 import { ErrorState } from '../components/error-state'
 import { SaveStatusIndicator } from '../components/save-status'
 import { Skeleton, TrackListSkeleton } from '../components/skeleton'
@@ -12,6 +14,7 @@ import '../styles/card-editor.css'
 export function CardEditor() {
   const { cardId } = useParams<{ cardId: string }>()
   const { isAuthenticated, isLoading: authLoading, loginWithRedirect } = useAuth0()
+  const [showIconPicker, setShowIconPicker] = useState(false)
 
   const {
     card,
@@ -32,7 +35,6 @@ export function CardEditor() {
   const { resolve } = useIconResolver()
 
   // AIDEV-NOTE: Resolve yoto:#ref → display URL for tracks that have iconRef but no iconUrl.
-  // Tracks with iconUrl already set (from user picking via icon picker) skip resolution.
   const resolvedTracks = useMemo(
     () =>
       tracks.map((t) => {
@@ -68,10 +70,9 @@ export function CardEditor() {
       <div className="card-editor">
         <div className="card-editor-preview">
           <Skeleton className="card-editor-artwork" />
-          <Skeleton width="100%" height="2em" radius="var(--radius-full)" />
         </div>
         <div className="card-editor-tracks">
-          <Skeleton width="80px" height="1.5em" radius="var(--radius-sm)" />
+          <Skeleton width="200px" height="2em" radius="var(--radius-sm)" />
           <TrackListSkeleton />
         </div>
       </div>
@@ -82,37 +83,54 @@ export function CardEditor() {
     return <div>Card not found</div>
   }
 
-  const metadata = card.metadata as { icon?: string; color?: string }
+  const metadata = card.metadata as { icon?: string; color?: string; cover?: { imageL?: string } }
+  const cardIconUrl = metadata.icon?.startsWith('yoto:#') ? resolve(metadata.icon) : metadata.icon
+  // AIDEV-NOTE: metadata.cover.imageL is the full card cover image (same as shown on Yoto portal)
+  const cardCoverUrl = metadata.cover?.imageL
+
+  const handleCardIconSelect = (_icon: DisplayIcon) => {
+    // AIDEV-TODO: wire card icon change through to save via useCardEditor
+    // For now just close the picker — card icon editing needs a dedicated handler
+    setShowIconPicker(false)
+  }
 
   return (
     <div className="card-editor">
-      {/* Left column: card preview */}
+      {/* Left column: card artwork — clickable to change icon */}
       <div className="card-editor-preview">
-        <div
+        <button
           className="card-editor-artwork"
           style={{ backgroundColor: metadata.color ?? '#6366F1' }}
+          onClick={() => setShowIconPicker(!showIconPicker)}
+          aria-label="Change card icon"
         >
-          {metadata.icon ? (
-            <img src={metadata.icon} alt="Card icon" className="card-editor-artwork-icon" />
+          {cardCoverUrl ? (
+            <img src={cardCoverUrl} alt="Card cover" className="card-editor-artwork-cover" />
+          ) : cardIconUrl ? (
+            <img src={cardIconUrl} alt="Card icon" className="card-editor-artwork-icon" />
           ) : null}
-        </div>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
-          }}
-          aria-label="Card title"
-          className="card-editor-title-input"
-        />
-        <button className="btn-secondary card-editor-change-icon">Change icon</button>
+          <span className="card-editor-artwork-overlay">Change</span>
+        </button>
+        {showIconPicker ? (
+          <div className="card-editor-icon-picker">
+            <IconPicker onSelect={handleCardIconSelect} />
+          </div>
+        ) : null}
       </div>
 
-      {/* Right column: track list */}
+      {/* Right column: editable title + track list */}
       <div className="card-editor-tracks">
         <div className="card-editor-tracks-header">
-          <h2>Tracks</h2>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+            }}
+            aria-label="Card title"
+            className="card-editor-title-input"
+          />
           <SaveStatusIndicator status={saveStatus} error={saveError} onRetry={retry} />
         </div>
         <TrackList
