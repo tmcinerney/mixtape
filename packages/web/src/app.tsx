@@ -69,7 +69,7 @@ function AvatarMenu() {
 }
 
 function Header() {
-  const { theme, toggleTheme } = useTheme()
+  const { preference, cycleTheme } = useTheme()
   const { isAuthenticated } = useAuth0()
 
   return (
@@ -122,10 +122,10 @@ function Header() {
       <div className="header-actions">
         <button
           className="header-theme-toggle"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          onClick={cycleTheme}
+          aria-label={`Theme: ${preference} (click to change)`}
         >
-          {theme === 'light' ? '☽' : '☀'}
+          {preference === 'light' ? '☀' : preference === 'dark' ? '☽' : '⚙'}
         </button>
         {isAuthenticated ? <AvatarMenu /> : null}
       </div>
