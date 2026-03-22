@@ -27,7 +27,7 @@ interface TrackListProps {
   onReorder: (tracks: Track[]) => void
   onDelete: (index: number) => void
   onTitleChange: (index: number, title: string) => void
-  onIconChange?: (index: number, iconUrl: string) => void
+  onIconChange?: (index: number, iconRef: string, iconUrl: string) => void
 }
 
 interface SortableTrackProps {
@@ -35,7 +35,7 @@ interface SortableTrackProps {
   index: number
   onDelete: (index: number) => void
   onTitleChange: (index: number, title: string) => void
-  onIconChange?: (index: number, iconUrl: string) => void
+  onIconChange?: (index: number, iconRef: string, iconUrl: string) => void
 }
 
 function SortableTrack({
@@ -68,8 +68,10 @@ function SortableTrack({
       </button>
       <span className="track-list-number">{index + 1}</span>
       <TrackIcon
-        {...(track.icon !== undefined ? { icon: track.icon } : {})}
-        {...(onIconChange ? { onSelect: (url: string) => onIconChange(index, url) } : {})}
+        {...(track.iconUrl !== undefined ? { icon: track.iconUrl } : {})}
+        {...(onIconChange
+          ? { onSelect: (ref: string, url: string) => onIconChange(index, ref, url) }
+          : {})}
       />
       <input
         type="text"
@@ -87,7 +89,13 @@ function SortableTrack({
 }
 
 // AIDEV-NOTE: Track icon — shows current icon or a placeholder. Click opens icon picker popover.
-function TrackIcon({ icon, onSelect }: { icon?: string; onSelect?: (url: string) => void }) {
+function TrackIcon({
+  icon,
+  onSelect,
+}: {
+  icon?: string
+  onSelect?: (ref: string, url: string) => void
+}) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -127,7 +135,7 @@ function TrackIcon({ icon, onSelect }: { icon?: string; onSelect?: (url: string)
         <div className="track-list-icon-popover">
           <IconPicker
             onSelect={(selected: DisplayIcon) => {
-              onSelect(selected.url)
+              onSelect(`yoto:#${selected.mediaId}`, selected.url)
               setOpen(false)
             }}
           />

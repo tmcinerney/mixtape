@@ -12,8 +12,9 @@ export interface Track {
   title?: string
   duration?: number
   overlayLabel?: string
-  /** Chapter display icon URL (from chapter.display.icon16x16) */
-  icon?: string
+  /** Chapter display icon — ref is the yoto:#mediaId for saving, url is for rendering */
+  iconRef?: string
+  iconUrl?: string
   /** Forward-compat: preserve unknown fields from the SDK/API. */
   [k: string]: unknown
 }

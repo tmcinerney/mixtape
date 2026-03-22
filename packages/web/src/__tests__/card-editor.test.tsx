@@ -100,6 +100,7 @@ describe('CardEditor', () => {
     mockUseYoto.mockReturnValue({
       sdk: {
         content: { getCard: mockGetCard, updateCard: mockUpdateCard },
+        icons: { getDisplayIcons: vi.fn().mockResolvedValue([]) },
       },
       isReady: true,
     })

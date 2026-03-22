@@ -8,10 +8,10 @@ import type { Track, Chapter, CardData } from '../types/yoto'
 export function chaptersToTracks(chapters: Chapter[]): Track[] {
   return chapters.map((ch) => {
     const firstTrack = ch.tracks[0]
-    // AIDEV-NOTE: Extract icon from chapter.display.icon16x16 — this is where
-    // Yoto stores the per-chapter display icon in the card JSON.
+    // AIDEV-NOTE: Extract icon ref from chapter.display.icon16x16 — Yoto stores
+    // icons as "yoto:#mediaId" references. Resolved to URLs via useIconResolver.
     const display = ch.display as { icon16x16?: string } | undefined
-    const icon = display?.icon16x16
+    const iconRef = display?.icon16x16
     return {
       key: ch.key,
       title: ch.title ?? firstTrack?.title ?? 'Untitled',
@@ -20,7 +20,7 @@ export function chaptersToTracks(chapters: Chapter[]): Track[] {
       channels: firstTrack?.channels ?? 'stereo',
       type: firstTrack?.type ?? 'audio',
       ...(firstTrack?.duration !== undefined ? { duration: firstTrack.duration } : {}),
-      ...(icon !== undefined ? { icon } : {}),
+      ...(iconRef !== undefined ? { iconRef } : {}),
     }
   })
 }
@@ -32,10 +32,10 @@ export function tracksToChapters(tracks: Track[], originalChapters: Chapter[]): 
     // Preserve original chapter data (display, ambient, etc) if it exists
     const original = originalChapters.find((ch) => ch.key === t.key)
     const key = String(i).padStart(2, '0')
-    // AIDEV-NOTE: Write icon back to chapter.display.icon16x16
+    // AIDEV-NOTE: Write icon ref back to chapter.display.icon16x16
     const originalDisplay = (original?.display ?? {}) as Record<string, unknown>
     const display =
-      t.icon !== undefined ? { ...originalDisplay, icon16x16: t.icon } : originalDisplay
+      t.iconRef !== undefined ? { ...originalDisplay, icon16x16: t.iconRef } : originalDisplay
 
     return {
       ...original,
@@ -72,7 +72,7 @@ export interface UseCardEditorResult {
   saveError: string | null
   error: string | null
   handleTitleChange: (index: number, newTitle: string) => void
-  handleIconChange: (index: number, iconUrl: string) => void
+  handleIconChange: (index: number, iconRef: string, iconUrl: string) => void
   handleDelete: (index: number) => void
   /** Save immediately — used for discrete actions (reorder, delete) */
   saveNow: () => void
@@ -180,8 +180,8 @@ export function useCardEditor(cardId: string | undefined): UseCardEditorResult {
   )
 
   const handleIconChange = useCallback(
-    (index: number, iconUrl: string) => {
-      setTracks((prev) => prev.map((t, i) => (i === index ? { ...t, icon: iconUrl } : t)))
+    (index: number, iconRef: string, iconUrl: string) => {
+      setTracks((prev) => prev.map((t, i) => (i === index ? { ...t, iconRef, iconUrl } : t)))
       // Discrete action — save immediately
       setTimeout(() => saveNow(), 0)
     },

@@ -60,12 +60,6 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
           >
             {card.cover?.imageS ? (
               <img src={card.cover.imageS} alt="" className="card-grid-image" />
-            ) : (card as unknown as { metadata?: { icon?: string } }).metadata?.icon ? (
-              <img
-                src={(card as unknown as { metadata: { icon: string } }).metadata.icon}
-                alt=""
-                className="card-grid-image"
-              />
             ) : null}
             <span className="card-grid-title">{card.title}</span>
           </Link>

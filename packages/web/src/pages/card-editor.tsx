@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import { useCardEditor } from '../hooks/use-card-editor'
+import { useIconResolver } from '../hooks/use-icon-resolver'
 import { TrackList } from '../components/track-list'
 import { ErrorState } from '../components/error-state'
 import { SaveStatusIndicator } from '../components/save-status'
@@ -26,6 +28,21 @@ export function CardEditor() {
     handleDelete,
     retry,
   } = useCardEditor(cardId)
+
+  const { resolve } = useIconResolver()
+
+  // AIDEV-NOTE: Resolve yoto:#ref → display URL for tracks that have iconRef but no iconUrl.
+  // Tracks with iconUrl already set (from user picking via icon picker) skip resolution.
+  const resolvedTracks = useMemo(
+    () =>
+      tracks.map((t) => {
+        if (t.iconUrl) return t
+        if (!t.iconRef) return t
+        const url = resolve(t.iconRef)
+        return url !== undefined ? { ...t, iconUrl: url } : t
+      }),
+    [tracks, resolve],
+  )
 
   if (authLoading) {
     return <div>Loading...</div>
@@ -99,7 +116,7 @@ export function CardEditor() {
           <SaveStatusIndicator status={saveStatus} error={saveError} onRetry={retry} />
         </div>
         <TrackList
-          tracks={tracks}
+          tracks={resolvedTracks}
           onReorder={setTracks}
           onDelete={handleDelete}
           onTitleChange={handleTitleChange}
