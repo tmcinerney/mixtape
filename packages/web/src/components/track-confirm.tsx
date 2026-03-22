@@ -50,6 +50,9 @@ export function TrackConfirm({ data, onConfirm, onCancel }: TrackConfirmProps) {
           type="text"
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleConfirm()
+          }}
           className={`track-confirm-input ${isOverSoft ? 'track-confirm-input--warn' : ''}`}
           autoFocus
         />

@@ -86,6 +86,9 @@ export function CardEditor() {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+          }}
           aria-label="Card title"
           className="card-editor-title-input"
         />

@@ -60,6 +60,9 @@ function SortableTrack({ track, index, onDelete, onTitleChange }: SortableTrackP
         type="text"
         value={track.title}
         onChange={(e) => onTitleChange(index, e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+        }}
         aria-label="Track title"
         className="track-list-title-input"
       />
