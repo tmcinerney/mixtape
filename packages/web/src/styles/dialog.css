@@ -47,6 +47,39 @@
   margin-bottom: var(--space-sm);
 }
 
+.dialog-icon-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.dialog-icon-trigger:hover {
+  background-color: var(--color-stripe);
+}
+
+.dialog-icon-preview {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.dialog-icon-name {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.dialog-icon-placeholder {
+  color: var(--color-text-secondary);
+}
+
 .dialog-icon-section > div {
   margin-top: var(--space-sm);
 }

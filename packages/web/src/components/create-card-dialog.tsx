@@ -69,8 +69,18 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
         </label>
 
         <div className="dialog-icon-section">
-          <button className="btn-secondary" onClick={() => setShowIconPicker(!showIconPicker)}>
-            {icon ? `Icon: ${icon.title}` : 'Choose icon'}
+          <button
+            className="dialog-icon-trigger"
+            onClick={() => setShowIconPicker(!showIconPicker)}
+          >
+            {icon ? (
+              <>
+                <img src={icon.url} alt={icon.title} className="dialog-icon-preview" />
+                <span className="dialog-icon-name">{icon.title}</span>
+              </>
+            ) : (
+              <span className="dialog-icon-placeholder">Choose icon</span>
+            )}
           </button>
           {showIconPicker ? (
             <div>
