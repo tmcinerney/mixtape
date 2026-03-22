@@ -12,17 +12,17 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@hono/node-server": "^1.13.8",
-    "@hono/zod-validator": "^0.4.3",
+    "@hono/node-server": "^1.19.11",
+    "@hono/zod-validator": "^0.7.6",
     "@mixtape/shared": "workspace:*",
-    "hono": "^4.7.4",
+    "hono": "^4.12.8",
     "openai": "^6.32.0",
-    "zod": "^3.24.2"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^22.13.5",
-    "tsx": "^4.19.3",
-    "typescript": "^5.7.3",
-    "vitest": "^3.0.7"
+    "@types/node": "^25.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
   }
 }
