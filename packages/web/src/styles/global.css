@@ -19,9 +19,6 @@ html {
   background-color: var(--color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* AIDEV-NOTE: Prevent scrollbar appearance from shifting layout */
-  scrollbar-gutter: stable;
-  overflow-x: hidden;
 }
 
 body {
@@ -32,7 +29,8 @@ body {
 
 /* Typography */
 h1 {
-  font-size: var(--font-size-3xl);
+  /* AIDEV-NOTE: Fluid type — scales smoothly from 1.5rem at 320px to 3rem at 900px+ */
+  font-size: clamp(1.5rem, 4vw + 0.5rem, 3rem);
   font-weight: var(--font-weight-extrabold);
   line-height: var(--line-height-tight);
   letter-spacing: -0.02em;
@@ -179,19 +177,9 @@ input::placeholder {
   width: 100%;
 }
 
-/* Scrollbar styling — consistent width in both modes to prevent layout shift */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-background);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-surface);
-  border-radius: var(--radius-full);
-}
+/* AIDEV-NOTE: Custom scrollbar styling removed — it forced a classic (non-overlay)
+ * scrollbar on macOS which created a gap next to the header. Default overlay
+ * scrollbars don't take layout space and don't cause the gap. */
 
 /* List reset */
 ul,
@@ -214,10 +202,6 @@ img {
 
 /* Responsive — tablet */
 @media (max-width: 768px) {
-  h1 {
-    font-size: var(--font-size-2xl);
-  }
-
   .app-main {
     padding: var(--space-lg) var(--space-md);
   }
@@ -225,10 +209,6 @@ img {
 
 /* Responsive — phone */
 @media (max-width: 480px) {
-  h1 {
-    font-size: var(--font-size-xl);
-  }
-
   .app-main {
     padding: var(--space-md) var(--space-sm);
   }

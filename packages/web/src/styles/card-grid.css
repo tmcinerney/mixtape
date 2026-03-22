@@ -115,26 +115,15 @@
   }
 }
 
-/* Responsive — phone: horizontal scroll strip */
+/* Responsive — phone: compact 2-column grid */
 @media (max-width: 480px) {
   .card-grid-section-header {
     margin-bottom: var(--space-sm);
   }
 
   .card-grid {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-sm);
-    padding-bottom: var(--space-sm);
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .card-grid-item,
-  .card-grid-add {
-    flex: 0 0 120px;
-    scroll-snap-align: start;
-    aspect-ratio: 2 / 3;
   }
 
   .card-grid-title {
