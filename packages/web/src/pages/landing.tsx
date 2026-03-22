@@ -21,7 +21,12 @@ export function LandingPage() {
   const handleTrackReady = useCallback(
     async (params: { mediaUrl: string; cardId: string; title: string; iconUrl?: string }) => {
       confirmedTitleRef.current = params.title
-      await addTrack({ cardId: params.cardId, mediaUrl: params.mediaUrl, title: params.title })
+      await addTrack({
+        cardId: params.cardId,
+        mediaUrl: params.mediaUrl,
+        title: params.title,
+        ...(params.iconUrl !== undefined ? { iconUrl: params.iconUrl } : {}),
+      })
     },
     [addTrack],
   )

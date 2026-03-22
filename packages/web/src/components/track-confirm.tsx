@@ -95,6 +95,7 @@ export function TrackConfirm({ data, onConfirm, onCancel }: TrackConfirmProps) {
                 setIcon(selected)
                 setShowIconPicker(false)
               }}
+              trackTitle={title}
             />
           </div>
         ) : null}
