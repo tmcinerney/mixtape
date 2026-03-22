@@ -1,4 +1,12 @@
-/* Icon picker grid */
+/* Icon picker */
+.icon-picker-loading {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: var(--space-md);
+  margin: 0;
+}
+
 .icon-picker-search {
   width: 100%;
   padding: var(--space-sm) var(--space-md);

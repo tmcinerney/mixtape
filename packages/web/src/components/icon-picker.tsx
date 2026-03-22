@@ -13,7 +13,7 @@ export function IconPicker({ onSelect }: IconPickerProps) {
   const [search, setSearch] = useState('')
 
   if (loading || !icons) {
-    return <div>Loading icons...</div>
+    return <p className="icon-picker-loading">Loading icons...</p>
   }
 
   const filtered = search
