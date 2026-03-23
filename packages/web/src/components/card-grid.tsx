@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
-import { useYoto } from '../auth/yoto-provider'
+import { deleteCardApi } from '../api/client'
 import { useYotoQuery } from '../hooks/use-yoto-query'
 import { ErrorState } from './error-state'
 import { CardGridSkeleton } from './skeleton'
@@ -23,11 +23,11 @@ interface CardGridProps {
 
 // AIDEV-NOTE: Two-click delete with visual states:
 // idle → confirming (red pill, 3s timeout) → deleting (spinner) → removed (fade-out) → refetch
-// On error: flash red then reset.
+// On error: flash red then reset. Uses server API, not SDK directly.
 type DeleteState = 'idle' | 'confirming' | 'deleting' | 'removed' | 'error'
 
 function useDeleteCard(onDeleted: () => void) {
-  const { sdk } = useYoto()
+  const { getAccessTokenSilently } = useAuth0()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [state, setDeleteState] = useState<DeleteState>('idle')
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -38,11 +38,10 @@ function useDeleteCard(onDeleted: () => void) {
         // Second click — execute delete
         setDeleteState('deleting')
         clearTimeout(timerRef.current)
-        sdk?.content
-          .deleteCard(cardId)
+        getAccessTokenSilently()
+          .then((token) => deleteCardApi(cardId, token))
           .then(() => {
             setDeleteState('removed')
-            // Let the fade-out animation play before refetching
             timerRef.current = setTimeout(() => {
               setActiveId(null)
               setDeleteState('idle')
@@ -67,7 +66,7 @@ function useDeleteCard(onDeleted: () => void) {
         }, 3000)
       }
     },
-    [activeId, state, sdk, onDeleted],
+    [activeId, state, getAccessTokenSilently, onDeleted],
   )
 
   useEffect(() => () => clearTimeout(timerRef.current), [])

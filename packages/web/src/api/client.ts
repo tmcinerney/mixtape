@@ -182,6 +182,35 @@ export async function matchCover(title: string, token: string): Promise<string[]
   return body.covers
 }
 
+export async function createCardApi(
+  title: string,
+  token: string,
+  coverUrl?: string,
+): Promise<string> {
+  const res = await fetch(`${API_BASE}/cards`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ title, coverUrl }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Unknown error' }))
+    throw new Error(body.error ?? `Failed to create card: ${res.status}`)
+  }
+  const data = (await res.json()) as { cardId: string }
+  return data.cardId
+}
+
+export async function deleteCardApi(cardId: string, token: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/cards/${cardId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Unknown error' }))
+    throw new Error(body.error ?? `Failed to delete card: ${res.status}`)
+  }
+}
+
 export async function suggestIcon(title: string, token: string): Promise<SuggestedIcon | null> {
   const params = new URLSearchParams({ title })
   const res = await fetch(`${API_BASE}/suggest-icon?${params}`, {

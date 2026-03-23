@@ -5,6 +5,7 @@ import { jobRoutes } from './routes/jobs'
 import { iconRoutes } from './routes/icons'
 import { metadataRoutes } from './routes/metadata'
 import { coverRoutes } from './routes/cover'
+import { cardRoutes } from './routes/cards'
 import { serveStatic } from './static'
 
 // AIDEV-NOTE: Read version from root package.json — bump on each release
@@ -39,6 +40,9 @@ export function createApp() {
 
   // Cover matching: GET /api/cover/match?title=...
   app.route('', coverRoutes)
+
+  // Card CRUD: POST /api/cards, DELETE /api/cards/:id
+  app.route('', cardRoutes)
 
   // AIDEV-NOTE: Static serving only when built web assets exist (production or after build)
   if (process.env['NODE_ENV'] === 'production' || existsSync(WEB_DIST_PATH)) {
