@@ -17,13 +17,19 @@ export function Skeleton({ width, height, radius, className = '' }: SkeletonProp
   )
 }
 
-/** Card grid placeholder — matches the 2:3 portrait card layout */
+/** Card grid placeholder — matches the section header + 2:3 portrait card layout */
 export function CardGridSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div className="card-grid">
-      {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="skeleton card-grid-skeleton" />
-      ))}
+    <div>
+      <div className="card-grid-section-header">
+        <Skeleton width="10ch" height="1.5rem" radius="var(--radius-sm)" />
+        <Skeleton width="2ch" height="1rem" radius="var(--radius-sm)" />
+      </div>
+      <div className="card-grid">
+        {Array.from({ length: count }, (_, i) => (
+          <div key={i} className="skeleton card-grid-skeleton" />
+        ))}
+      </div>
     </div>
   )
 }
