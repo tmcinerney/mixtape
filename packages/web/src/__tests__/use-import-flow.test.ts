@@ -102,7 +102,7 @@ describe('useImportFlow', () => {
           isAuthenticated: mockIsAuthenticated,
           getAccessTokenSilently: mockGetAccessTokenSilently,
           loginWithRedirect: mockLoginWithRedirect,
-        }) as ReturnType<typeof UseAuth0Type>,
+        }) as unknown as ReturnType<typeof UseAuth0Type>,
     )
   })
 
@@ -218,7 +218,7 @@ describe('useImportFlow', () => {
           isAuthenticated: false,
           getAccessTokenSilently: mockGetAccessTokenSilently,
           loginWithRedirect: mockLoginWithRedirect,
-        }) as ReturnType<typeof UseAuth0Type>,
+        }) as unknown as ReturnType<typeof UseAuth0Type>,
     )
 
     mockClassifyUrl.mockReturnValue({ type: 'video', videoId: 'dQw4w9WgXcQ' })
