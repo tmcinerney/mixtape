@@ -112,30 +112,23 @@
   position: relative;
 }
 
-/* Delete button — subtle, appears on hover */
+/* Delete button — clean white ×, appears on hover */
 .card-grid-delete {
   position: absolute;
-  top: var(--space-xs);
-  right: var(--space-xs);
+  top: var(--space-sm);
+  right: var(--space-sm);
   z-index: 2;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: var(--font-size-xs);
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   opacity: 0;
-  transition:
-    opacity var(--duration-normal) var(--easing-smooth),
-    background-color var(--duration-fast) var(--easing-smooth);
+  transition: opacity var(--duration-normal) var(--easing-smooth);
   cursor: pointer;
   border: none;
-  padding: 0;
+  background: none;
+  padding: var(--space-xs);
 }
 
 .card-grid-wrapper:hover .card-grid-delete,
@@ -144,25 +137,23 @@
 }
 
 .card-grid-delete:hover {
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
+  opacity: 1;
+  transform: scale(1.2);
 }
 
 .card-grid-delete--confirm {
-  width: auto;
-  height: auto;
   border-radius: var(--radius-full);
-  padding: 3px var(--space-sm);
+  padding: 2px var(--space-sm);
   background: var(--color-error);
-  color: white;
+  text-shadow: none;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   opacity: 1;
-  backdrop-filter: none;
 }
 
 .card-grid-delete--confirm:hover {
   filter: brightness(0.9);
+  transform: none;
 }
 
 /* Responsive — tablet and below: 2-column grid with larger cards */
