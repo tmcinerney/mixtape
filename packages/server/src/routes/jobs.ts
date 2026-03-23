@@ -79,6 +79,11 @@ app.post('/api/jobs/import', zValidator('json', ImportJobRequestSchema), (c) => 
     } catch {
       queue.markFailed(jobId)
     }
+
+    // AIDEV-NOTE: Write a final sentinel event to ensure Hono flushes the
+    // last real event before closing the stream. Without this, the 'complete'
+    // event can be buffered and lost when the response ends.
+    await stream.writeSSE({ data: '', event: 'done' })
   })
 })
 
