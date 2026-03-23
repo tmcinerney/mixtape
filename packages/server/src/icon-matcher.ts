@@ -39,7 +39,7 @@ let cachedIcons: IconEntry[] = []
 let cachedVectors: number[][] = []
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getExtractor(): Promise<any> {
+export async function getExtractor(): Promise<any> {
   if (!extractor) {
     const pipelineFn = await loadPipeline()
     extractor = await pipelineFn('feature-extraction', MODEL_NAME, {
@@ -49,7 +49,7 @@ async function getExtractor(): Promise<any> {
   return extractor
 }
 
-function cosineSim(a: number[], b: number[]): number {
+export function cosineSim(a: number[], b: number[]): number {
   let dot = 0
   for (let i = 0; i < a.length; i++) {
     dot += a[i]! * b[i]!
