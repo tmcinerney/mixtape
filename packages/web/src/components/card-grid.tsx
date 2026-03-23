@@ -30,12 +30,14 @@ function useDeleteCard(onDeleted: () => void) {
   const { getAccessTokenSilently } = useAuth0()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [state, setDeleteState] = useState<DeleteState>('idle')
+  // AIDEV-NOTE: Track removed IDs to filter them from the rendered list
+  // while refetch is in flight — prevents the "pop back" flash.
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set())
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const requestDelete = useCallback(
     (cardId: string) => {
       if (activeId === cardId && state === 'confirming') {
-        // Second click — execute delete
         setDeleteState('deleting')
         clearTimeout(timerRef.current)
         getAccessTokenSilently()
@@ -43,6 +45,8 @@ function useDeleteCard(onDeleted: () => void) {
           .then(() => {
             setDeleteState('removed')
             timerRef.current = setTimeout(() => {
+              // Optimistically hide the card before refetch completes
+              setRemovedIds((prev) => new Set(prev).add(cardId))
               setActiveId(null)
               setDeleteState('idle')
               onDeleted()
@@ -56,7 +60,6 @@ function useDeleteCard(onDeleted: () => void) {
             }, 1500)
           })
       } else {
-        // First click — show confirm
         setActiveId(cardId)
         setDeleteState('confirming')
         clearTimeout(timerRef.current)
@@ -76,7 +79,9 @@ function useDeleteCard(onDeleted: () => void) {
     [activeId, state],
   )
 
-  return { getCardState, requestDelete }
+  const isRemoved = useCallback((cardId: string) => removedIds.has(cardId), [removedIds])
+
+  return { getCardState, requestDelete, isRemoved }
 }
 
 // AIDEV-NOTE: Rotating card background colors per design spec
@@ -96,7 +101,8 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
     error,
     refetch,
   } = useYotoQuery<CardWithMetadata[]>((sdk) => sdk.content.getMyCards())
-  const { getCardState, requestDelete } = useDeleteCard(refetch)
+  const { getCardState, requestDelete, isRemoved } = useDeleteCard(refetch)
+  const visibleCards = (cards ?? []).filter((c) => !isRemoved(c.cardId))
 
   if (!isAuthenticated) {
     return null
@@ -120,10 +126,10 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
     <div>
       <div className="card-grid-section-header">
         <h2>Your Cards</h2>
-        <span className="card-grid-count">{cards.length}</span>
+        <span className="card-grid-count">{visibleCards.length}</span>
       </div>
       <div className="card-grid">
-        {cards.map((card, index) => {
+        {visibleCards.map((card, index) => {
           const deleteState = getCardState(card.cardId)
           const wrapperClass = [
             'card-grid-wrapper',
