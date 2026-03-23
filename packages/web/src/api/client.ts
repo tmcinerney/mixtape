@@ -1,4 +1,10 @@
-import type { JobRequest } from '@mixtape/shared'
+import type { JobRequest, MetadataResponse, ImportJobRequest } from '@mixtape/shared'
+
+// AIDEV-NOTE: MetadataResult covers both typed responses (video/playlist) and the
+// ambiguous case where the URL points to both a video and a playlist simultaneously.
+export type MetadataResult =
+  | (MetadataResponse & { type: 'video' | 'playlist' })
+  | { type: 'ambiguous'; videoId: string; listId: string }
 
 const API_BASE = '/api'
 
@@ -136,6 +142,89 @@ export interface SuggestedIcon {
   title: string
   url: string
   score: number
+}
+
+export async function fetchMetadata(url: string, token: string): Promise<MetadataResult> {
+  const res = await fetch(`${API_BASE}/metadata?url=${encodeURIComponent(url)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Unknown error' }))
+    throw new Error(body.error ?? `Failed to fetch metadata: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function startImport(
+  params: ImportJobRequest,
+  token: string,
+): Promise<{ jobId: string; eventSource: JobStream }> {
+  const controller = new AbortController()
+
+  const res = await fetch(`${API_BASE}/jobs/import`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+    signal: controller.signal,
+  })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Failed to start import: ${res.status} ${text}`)
+  }
+
+  if (!res.body) {
+    throw new Error('No response body for SSE stream')
+  }
+
+  // AIDEV-NOTE: Same SSE pattern as startJob — parse the stream into an EventTarget
+  // so callers can listen for progress events via addEventListener().
+  const target = new EventTarget()
+  const stream: JobStream = Object.assign(target, {
+    close: () => controller.abort(),
+  })
+
+  parseSSEStream(res.body, target, controller.signal)
+
+  const jobId = await new Promise<string>((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Timeout waiting for import init')), 10000)
+
+    target.addEventListener(
+      'init',
+      (e) => {
+        clearTimeout(timeout)
+        try {
+          const data = JSON.parse((e as MessageEvent).data as string) as { jobId: string }
+          resolve(data.jobId)
+        } catch {
+          reject(new Error('Failed to parse init event'))
+        }
+      },
+      { once: true },
+    )
+
+    target.addEventListener(
+      'error',
+      () => {
+        clearTimeout(timeout)
+        reject(new Error('Stream error before init'))
+      },
+      { once: true },
+    )
+  })
+
+  return { jobId, eventSource: stream }
+}
+
+export async function matchCover(title: string, token: string): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/cover/match?title=${encodeURIComponent(title)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const body = (await res.json()) as { covers: string[] }
+  return body.covers
 }
 
 export async function suggestIcon(title: string, token: string): Promise<SuggestedIcon | null> {
