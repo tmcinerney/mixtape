@@ -22,7 +22,7 @@ describe('ImportComplete', () => {
   it('shows imported/total for multi-track', () => {
     render(<ImportComplete {...defaultProps} imported={18} total={20} />)
 
-    expect(screen.getByText('Imported 18/20 tracks')).toBeInTheDocument()
+    expect(screen.getByText('18/20 tracks imported')).toBeInTheDocument()
   })
 
   it('shows skipped track details', () => {
@@ -42,7 +42,8 @@ describe('ImportComplete', () => {
   it('shows cancelled state', () => {
     render(<ImportComplete {...defaultProps} imported={12} total={20} cancelled />)
 
-    expect(screen.getByText(/12 tracks.*cancelled/i)).toBeInTheDocument()
+    expect(screen.getByText(/12/)).toBeInTheDocument()
+    expect(screen.getByText(/cancelled/i)).toBeInTheDocument()
   })
 
   it('calls onViewCard with cardId when View Card is clicked', () => {
