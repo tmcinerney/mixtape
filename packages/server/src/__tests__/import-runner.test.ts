@@ -25,7 +25,10 @@ vi.mock('node:fs/promises', () => ({
 import { downloadAudio } from '../youtube'
 import { uploadToYoto } from '../yoto-upload'
 import { createCard, addChapterToCard } from '../yoto-cards'
-import { runImport, type ImportConfig } from '../import-runner'
+import { runImport, setRetryDelay, type ImportConfig } from '../import-runner'
+
+// AIDEV-NOTE: Disable retry backoff in tests to avoid timeouts
+setRetryDelay(0)
 
 const baseTrack = { videoId: 'abc123', title: 'Track One' }
 

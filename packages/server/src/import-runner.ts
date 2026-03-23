@@ -42,6 +42,12 @@ const PERMANENT_ERROR_CODES = [
   'VIDEO_NOT_FOUND',
 ]
 
+// AIDEV-NOTE: Configurable for testing — set to 0 to disable backoff in tests
+let retryBaseDelayMs = 5000
+export function setRetryDelay(ms: number) {
+  retryBaseDelayMs = ms
+}
+
 async function withRetry<T>(fn: () => Promise<T>, retries: number): Promise<T> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -51,6 +57,12 @@ async function withRetry<T>(fn: () => Promise<T>, retries: number): Promise<T> {
       // Don't retry permanent failures (VIDEO_PRIVATE, etc.)
       if (err instanceof PipelineError && PERMANENT_ERROR_CODES.includes(err.code)) {
         throw err
+      }
+      // AIDEV-NOTE: Exponential backoff — 5s, 10s. YouTube rate-limits aggressively.
+      const delay = retryBaseDelayMs * (attempt + 1)
+      if (delay > 0) {
+        console.warn(`[import-runner] Retry ${attempt + 1}/${retries} after ${delay}ms`)
+        await new Promise((r) => setTimeout(r, delay))
       }
     }
   }
@@ -117,6 +129,7 @@ export async function runImport(
       imported++
       onEvent({ type: 'track-complete', index: i })
     } catch (err) {
+      console.error('[import-runner] Track failed:', err)
       const reason = errorCodeToReason(err)
       skipped.push({ title: track.title, reason })
       onEvent({ type: 'track-skipped', index: i, title: track.title, reason })
