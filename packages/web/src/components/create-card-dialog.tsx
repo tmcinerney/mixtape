@@ -15,6 +15,7 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
   const { sdk } = useYoto()
   const [title, setTitle] = useState('')
   const [creating, setCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   if (!open) return null
 
@@ -22,27 +23,33 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
     if (!sdk || !title.trim()) return
 
     setCreating(true)
+    setError(null)
 
-    const newCard: YotoJson = {
-      content: {
-        activity: 'none',
-        editTracksDisabled: false,
-        chapters: {},
-        config: { onlineOnly: true },
-        version: 2,
-        restricted: false,
-      },
-      metadata: {
-        title: title.trim(),
-        color: '#6366F1',
-      },
+    try {
+      const newCard: YotoJson = {
+        content: {
+          activity: 'none',
+          editTracksDisabled: false,
+          chapters: {},
+          config: { onlineOnly: true },
+          version: 2,
+          restricted: false,
+        },
+        metadata: {
+          title: title.trim(),
+          color: '#6366F1',
+        },
+      }
+
+      await sdk.content.updateCard(newCard)
+
+      setTitle('')
+      setCreating(false)
+      onCreated()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create card')
+      setCreating(false)
     }
-
-    await sdk.content.updateCard(newCard)
-
-    setTitle('')
-    setCreating(false)
-    onCreated()
   }
 
   return (
@@ -63,6 +70,10 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
             }}
           />
         </label>
+
+        {error && (
+          <p style={{ color: 'var(--color-error)', fontSize: 'var(--font-size-sm)' }}>{error}</p>
+        )}
 
         <div className="dialog-actions">
           <button className="btn-ghost" onClick={onClose} disabled={creating}>
