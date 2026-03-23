@@ -30,7 +30,25 @@ function parseSSEStream(
       }
 
       const { done, value } = await streamReader.read()
-      if (done) return
+      if (done) {
+        // AIDEV-NOTE: Flush any remaining buffered lines + event when stream closes.
+        // The server may close without a trailing \n\n after the last event.
+        // Process any remaining buffer content first.
+        if (buffer) {
+          for (const line of buffer.split('\n')) {
+            if (line.startsWith('event: ')) {
+              currentEvent = line.slice(7).trim()
+            } else if (line.startsWith('data: ')) {
+              currentData = line.slice(6)
+            }
+          }
+        }
+        if (currentData) {
+          const event = new MessageEvent(currentEvent || 'message', { data: currentData })
+          target.dispatchEvent(event)
+        }
+        return
+      }
 
       buffer += decoder.decode(value, { stream: true })
       const lines = buffer.split('\n')
