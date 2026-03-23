@@ -2,9 +2,9 @@ import type { JobStatus } from '@mixtape/shared'
 
 export interface ImportRequest {
   url: string
-  cardId?: string
-  cardTitle?: string
-  coverUrl?: string
+  cardId?: string | undefined
+  cardTitle?: string | undefined
+  coverUrl?: string | undefined
   tracks: Array<{ videoId: string; title: string }>
   yotoToken: string
 }

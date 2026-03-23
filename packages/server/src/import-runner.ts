@@ -8,9 +8,9 @@ import { suggestTitle } from './suggest-title'
 
 export interface ImportConfig {
   url: string
-  cardId?: string
-  cardTitle?: string
-  coverUrl?: string
+  cardId?: string | undefined
+  cardTitle?: string | undefined
+  coverUrl?: string | undefined
   tracks: Array<{ videoId: string; title: string }>
   yotoToken: string
 }

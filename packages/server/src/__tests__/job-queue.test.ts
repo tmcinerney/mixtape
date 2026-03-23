@@ -10,8 +10,9 @@ describe('JobQueue', () => {
 
   it('enqueues a job and returns a job ID', () => {
     const id = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=abc',
+      url: 'https://www.youtube.com/watch?v=abc',
       cardId: 'card-1',
+      tracks: [{ videoId: 'abc', title: 'Test' }],
       yotoToken: 'tok',
     })
     expect(typeof id).toBe('string')
@@ -20,13 +21,15 @@ describe('JobQueue', () => {
 
   it('starts jobs up to maxConcurrent immediately', () => {
     const id1 = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=1',
+      url: 'https://www.youtube.com/watch?v=1',
       cardId: 'c1',
+      tracks: [{ videoId: '1', title: 'T' }],
       yotoToken: 't',
     })
     const id2 = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=2',
+      url: 'https://www.youtube.com/watch?v=2',
       cardId: 'c2',
+      tracks: [{ videoId: '2', title: 'T' }],
       yotoToken: 't',
     })
 
@@ -36,18 +39,21 @@ describe('JobQueue', () => {
 
   it('queues jobs beyond maxConcurrent', () => {
     queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=1',
+      url: 'https://www.youtube.com/watch?v=1',
       cardId: 'c1',
+      tracks: [{ videoId: '1', title: 'T' }],
       yotoToken: 't',
     })
     queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=2',
+      url: 'https://www.youtube.com/watch?v=2',
       cardId: 'c2',
+      tracks: [{ videoId: '2', title: 'T' }],
       yotoToken: 't',
     })
     const id3 = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=3',
+      url: 'https://www.youtube.com/watch?v=3',
       cardId: 'c3',
+      tracks: [{ videoId: '3', title: 'T' }],
       yotoToken: 't',
     })
 
@@ -56,18 +62,21 @@ describe('JobQueue', () => {
 
   it('promotes queued jobs when running slots open', () => {
     const id1 = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=1',
+      url: 'https://www.youtube.com/watch?v=1',
       cardId: 'c1',
+      tracks: [{ videoId: '1', title: 'T' }],
       yotoToken: 't',
     })
     queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=2',
+      url: 'https://www.youtube.com/watch?v=2',
       cardId: 'c2',
+      tracks: [{ videoId: '2', title: 'T' }],
       yotoToken: 't',
     })
     const id3 = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=3',
+      url: 'https://www.youtube.com/watch?v=3',
       cardId: 'c3',
+      tracks: [{ videoId: '3', title: 'T' }],
       yotoToken: 't',
     })
 
@@ -82,8 +91,9 @@ describe('JobQueue', () => {
 
   it('cancels a running job', () => {
     const id = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=1',
+      url: 'https://www.youtube.com/watch?v=1',
       cardId: 'c1',
+      tracks: [{ videoId: '1', title: 'T' }],
       yotoToken: 't',
     })
 
@@ -94,18 +104,21 @@ describe('JobQueue', () => {
 
   it('cancels a queued job', () => {
     queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=1',
+      url: 'https://www.youtube.com/watch?v=1',
       cardId: 'c1',
+      tracks: [{ videoId: '1', title: 'T' }],
       yotoToken: 't',
     })
     queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=2',
+      url: 'https://www.youtube.com/watch?v=2',
       cardId: 'c2',
+      tracks: [{ videoId: '2', title: 'T' }],
       yotoToken: 't',
     })
     const id3 = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=3',
+      url: 'https://www.youtube.com/watch?v=3',
       cardId: 'c3',
+      tracks: [{ videoId: '3', title: 'T' }],
       yotoToken: 't',
     })
 
@@ -120,13 +133,15 @@ describe('JobQueue', () => {
 
   it('lists all active and queued jobs', () => {
     queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=1',
+      url: 'https://www.youtube.com/watch?v=1',
       cardId: 'c1',
+      tracks: [{ videoId: '1', title: 'T' }],
       yotoToken: 't',
     })
     queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=2',
+      url: 'https://www.youtube.com/watch?v=2',
       cardId: 'c2',
+      tracks: [{ videoId: '2', title: 'T' }],
       yotoToken: 't',
     })
 
@@ -137,8 +152,9 @@ describe('JobQueue', () => {
 
   it('cleans up completed jobs after delay', async () => {
     const id = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=1',
+      url: 'https://www.youtube.com/watch?v=1',
       cardId: 'c1',
+      tracks: [{ videoId: '1', title: 'T' }],
       yotoToken: 't',
     })
 
@@ -157,8 +173,9 @@ describe('JobQueue', () => {
     queue = new JobQueue({ maxConcurrent: 1, cleanupDelayMs: 100, onStart })
 
     const id1 = queue.enqueue({
-      youtubeUrl: 'https://www.youtube.com/watch?v=1',
+      url: 'https://www.youtube.com/watch?v=1',
       cardId: 'c1',
+      tracks: [{ videoId: '1', title: 'T' }],
       yotoToken: 't',
     })
 
