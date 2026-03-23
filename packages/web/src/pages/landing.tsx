@@ -1,39 +1,28 @@
-import { useCallback, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
-import { useUploadFlow } from '../hooks/use-upload-flow'
-import { useAddTrack } from '../hooks/use-add-track'
+import { useImportFlow } from '../hooks/use-import-flow'
 import { UrlInput } from '../components/url-input'
-import { CardSelector } from '../components/card-selector'
-import { UploadProgress } from '../components/upload-progress'
-import { TrackConfirm } from '../components/track-confirm'
-import { UploadConfirmation } from '../components/upload-confirmation'
+import { Disambiguation } from '../components/disambiguation'
+import { ImportConfirm } from '../components/import-confirm'
+import { ImportProgress } from '../components/import-progress'
+import { ImportComplete } from '../components/import-complete'
 import { CardGrid } from '../components/card-grid'
 import { CreateCardDialog } from '../components/create-card-dialog'
+import { CassetteLoader } from '../components/cassette-loader'
+import { matchCover } from '../api/client'
 import '../styles/landing.css'
 
 export function LandingPage() {
-  const { isAuthenticated } = useAuth0()
-  const { addTrack } = useAddTrack()
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0()
   const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)
-  // AIDEV-NOTE: Track the confirmed title so we can show it in the success screen.
-  const confirmedTitleRef = useRef('Track')
+  const flow = useImportFlow()
 
-  const handleTrackReady = useCallback(
-    async (params: { mediaUrl: string; cardId: string; title: string; iconUrl?: string }) => {
-      confirmedTitleRef.current = params.title
-      await addTrack({
-        cardId: params.cardId,
-        mediaUrl: params.mediaUrl,
-        title: params.title,
-        ...(params.iconUrl !== undefined ? { iconUrl: params.iconUrl } : {}),
-      })
-    },
-    [addTrack],
-  )
-
-  const flow = useUploadFlow({ onTrackReady: handleTrackReady })
+  const handleRefreshCovers = async (title: string): Promise<string[]> => {
+    const token = await getAccessTokenSilently()
+    return matchCover(title, token)
+  }
 
   return (
     <div className={`landing${!isAuthenticated ? ' landing--centered' : ''}`}>
@@ -45,37 +34,61 @@ export function LandingPage() {
 
         {flow.state === 'idle' ? <UrlInput onSubmit={flow.submitUrl} /> : null}
 
-        {flow.state === 'selecting-card' ? (
-          <CardSelector onSelect={flow.selectCard} onCancel={flow.reset} />
+        {flow.state === 'disambiguating' && flow.ambiguousUrl ? (
+          <Disambiguation
+            videoId={flow.ambiguousUrl.videoId}
+            listId={flow.ambiguousUrl.listId}
+            onChoose={flow.disambiguate}
+          />
         ) : null}
 
-        {flow.state === 'uploading' ? (
-          <UploadProgress
-            progress={flow.progress}
-            title={flow.youtubeUrl ?? 'Processing...'}
+        {flow.state === 'extracting' ? (
+          <div className="landing-extracting">
+            <CassetteLoader progress={0} />
+            <p>Fetching info...</p>
+          </div>
+        ) : null}
+
+        {flow.state === 'confirming' && flow.metadata ? (
+          <ImportConfirm
+            metadata={flow.metadata}
+            onConfirm={flow.confirmImport}
+            onCancel={flow.reset}
+            onRefreshCovers={handleRefreshCovers}
+          />
+        ) : null}
+
+        {flow.state === 'importing' ? (
+          <ImportProgress
+            currentTrack={flow.progress?.currentTrack ?? 0}
+            totalTracks={flow.progress?.totalTracks ?? 1}
+            currentTitle={flow.progress?.currentTitle ?? 'Processing...'}
+            trackProgress={flow.progress?.trackProgress ?? null}
+            completedTracks={flow.completedTracks}
             onCancel={flow.cancel}
           />
         ) : null}
 
-        {flow.state === 'confirming' && flow.confirmData ? (
-          <TrackConfirm
-            data={flow.confirmData}
-            onConfirm={flow.confirmTrack}
-            onCancel={flow.reset}
+        {flow.state === 'complete' && flow.result ? (
+          <ImportComplete
+            cardId={flow.result.cardId}
+            imported={flow.result.imported}
+            total={flow.result.imported + flow.result.skipped.length}
+            skipped={flow.result.skipped}
+            onViewCard={(id) => navigate(`/cards/${id}`)}
+            onImportAnother={flow.reset}
           />
         ) : null}
 
-        {flow.state === 'adding-track' ? (
-          <p className="landing-adding">Adding track to card...</p>
-        ) : null}
-
-        {flow.state === 'complete' ? (
-          <UploadConfirmation
-            cardName={flow.cardId ?? 'Card'}
-            trackTitle={confirmedTitleRef.current}
-            cardId={flow.cardId ?? ''}
+        {flow.state === 'cancelled' && flow.result ? (
+          <ImportComplete
+            cardId={flow.result.cardId}
+            imported={flow.result.imported}
+            total={flow.result.imported + flow.result.skipped.length}
+            skipped={flow.result.skipped}
+            cancelled
             onViewCard={(id) => navigate(`/cards/${id}`)}
-            onAddAnother={flow.reset}
+            onImportAnother={flow.reset}
           />
         ) : null}
 
