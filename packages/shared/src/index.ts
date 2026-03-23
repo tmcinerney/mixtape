@@ -15,3 +15,4 @@ export {
   ImportProgressSchema,
   type ImportProgress,
 } from './import-schemas'
+export { classifyUrl, type UrlClassification } from './url-classify'
