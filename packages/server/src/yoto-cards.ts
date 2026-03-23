@@ -79,7 +79,9 @@ export async function addChapterToCard(
 
   chapters.push(newChapter)
 
-  // Update card with retry-once logic
+  // AIDEV-NOTE: Yoto API uses POST /content for both create AND update (upsert).
+  // Including cardId in the body triggers an update. Discovered from SDK source:
+  // sdk.content.updateCard() calls POST /content, not PUT /content/{id}.
   const updatePayload = {
     ...card,
     cardId,
@@ -93,16 +95,16 @@ export async function addChapterToCard(
   }
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const putResp = await fetch(`${YOTO_API_BASE}/content/${cardId}`, {
-      method: 'PUT',
+    const postResp = await fetch(`${YOTO_API_BASE}/content?skipMediaFileCheck=true`, {
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(updatePayload),
     })
-    if (putResp.ok) return
+    if (postResp.ok) return
     if (attempt === 0) continue // retry once
-    throw new Error(`Failed to update card after retry: ${putResp.status}`)
+    throw new Error(`Failed to update card after retry: ${postResp.status}`)
   }
 }

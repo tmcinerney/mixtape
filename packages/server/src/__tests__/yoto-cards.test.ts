@@ -101,9 +101,9 @@ describe('addChapterToCard', () => {
     expect(getOpts.method).toBeUndefined() // GET has no method set
   })
 
-  it('calls PUT /content/{cardId} with merged chapters', async () => {
+  it('calls POST /content (upsert) with merged chapters', async () => {
     mockFetch.mockResolvedValueOnce(mockResponse(makeExistingCard()))
-    mockFetch.mockResolvedValueOnce(mockResponse({})) // PUT
+    mockFetch.mockResolvedValueOnce(mockResponse({})) // POST upsert
 
     await addChapterToCard(
       'card-abc',
@@ -111,13 +111,13 @@ describe('addChapterToCard', () => {
       'test-token',
     )
 
-    const [putUrl, putOpts] = mockFetch.mock.calls[1]!
-    expect(putUrl).toBe('https://api.yotoplay.com/content/card-abc')
-    expect(putOpts.method).toBe('PUT')
-    expect(putOpts.headers['Authorization']).toBe('Bearer test-token')
-    expect(putOpts.headers['Content-Type']).toBe('application/json')
+    const [postUrl, postOpts] = mockFetch.mock.calls[1]!
+    expect(postUrl).toBe('https://api.yotoplay.com/content?skipMediaFileCheck=true')
+    expect(postOpts.method).toBe('POST')
+    expect(postOpts.headers['Authorization']).toBe('Bearer test-token')
+    expect(postOpts.headers['Content-Type']).toBe('application/json')
 
-    const body = JSON.parse(putOpts.body as string)
+    const body = JSON.parse(postOpts.body as string)
     expect(body.content.chapters).toHaveLength(1)
     expect(body.content.chapters[0].title).toBe('Track 1')
   })
