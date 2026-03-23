@@ -67,7 +67,7 @@ export function ImportConfirm({
       onConfirm({
         cardTitle,
         coverUrl,
-        tracks: [{ videoId: metadata.tracks[0].videoId, title: trackTitle }],
+        tracks: [{ videoId: metadata.tracks[0]!.videoId, title: trackTitle }],
       })
     }
   }
