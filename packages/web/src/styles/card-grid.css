@@ -155,6 +155,66 @@
   filter: brightness(0.9);
 }
 
+/* Deleting — pulsing opacity on the button */
+.card-grid-delete--deleting {
+  background: var(--color-text-secondary);
+  animation: card-delete-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes card-delete-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Error — flash red */
+.card-grid-delete--error {
+  background: var(--color-error);
+}
+
+/* Wrapper states — affect the whole card */
+.card-grid-wrapper--deleting {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity var(--duration-normal) var(--easing-smooth);
+}
+
+.card-grid-wrapper--removed {
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
+  transition:
+    opacity var(--duration-slow) var(--easing-smooth),
+    transform var(--duration-slow) var(--easing-smooth);
+}
+
+.card-grid-wrapper--error {
+  animation: card-error-shake 0.4s ease-in-out;
+}
+
+@keyframes card-error-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
 /* Responsive — tablet and below: 2-column grid with larger cards */
 @media (max-width: 840px) {
   .card-grid {

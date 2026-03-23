@@ -21,43 +21,63 @@ interface CardGridProps {
   onAddPlaylist?: () => void
 }
 
-// AIDEV-NOTE: Two-click delete — first click shows confirm, auto-resets after 3s.
-// Same pattern as the track delete in card-editor.
+// AIDEV-NOTE: Two-click delete with visual states:
+// idle → confirming (red pill, 3s timeout) → deleting (spinner) → removed (fade-out) → refetch
+// On error: flash red then reset.
+type DeleteState = 'idle' | 'confirming' | 'deleting' | 'removed' | 'error'
+
 function useDeleteCard(onDeleted: () => void) {
   const { sdk } = useYoto()
-  const [pendingId, setPendingId] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [state, setDeleteState] = useState<DeleteState>('idle')
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const requestDelete = useCallback(
     (cardId: string) => {
-      if (pendingId === cardId) {
-        // Second click — confirm
-        setDeleting(true)
+      if (activeId === cardId && state === 'confirming') {
+        // Second click — execute delete
+        setDeleteState('deleting')
+        clearTimeout(timerRef.current)
         sdk?.content
           .deleteCard(cardId)
           .then(() => {
-            setPendingId(null)
-            setDeleting(false)
-            onDeleted()
+            setDeleteState('removed')
+            // Let the fade-out animation play before refetching
+            timerRef.current = setTimeout(() => {
+              setActiveId(null)
+              setDeleteState('idle')
+              onDeleted()
+            }, 400)
           })
           .catch(() => {
-            setPendingId(null)
-            setDeleting(false)
+            setDeleteState('error')
+            timerRef.current = setTimeout(() => {
+              setActiveId(null)
+              setDeleteState('idle')
+            }, 1500)
           })
       } else {
         // First click — show confirm
-        setPendingId(cardId)
+        setActiveId(cardId)
+        setDeleteState('confirming')
         clearTimeout(timerRef.current)
-        timerRef.current = setTimeout(() => setPendingId(null), 3000)
+        timerRef.current = setTimeout(() => {
+          setActiveId(null)
+          setDeleteState('idle')
+        }, 3000)
       }
     },
-    [pendingId, sdk, onDeleted],
+    [activeId, state, sdk, onDeleted],
   )
 
   useEffect(() => () => clearTimeout(timerRef.current), [])
 
-  return { pendingId, deleting, requestDelete }
+  const getCardState = useCallback(
+    (cardId: string): DeleteState => (activeId === cardId ? state : 'idle'),
+    [activeId, state],
+  )
+
+  return { getCardState, requestDelete }
 }
 
 // AIDEV-NOTE: Rotating card background colors per design spec
@@ -77,7 +97,7 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
     error,
     refetch,
   } = useYotoQuery<CardWithMetadata[]>((sdk) => sdk.content.getMyCards())
-  const { pendingId, deleting, requestDelete } = useDeleteCard(refetch)
+  const { getCardState, requestDelete } = useDeleteCard(refetch)
 
   if (!isAuthenticated) {
     return null
@@ -98,35 +118,69 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
         <span className="card-grid-count">{cards.length}</span>
       </div>
       <div className="card-grid">
-        {cards.map((card, index) => (
-          <div key={card.cardId} className="card-grid-wrapper">
-            <Link
-              to={`/cards/${card.cardId}`}
-              aria-label={card.title}
-              className="card-grid-item"
-              style={{ backgroundColor: CARD_COLORS[index % CARD_COLORS.length] }}
-            >
-              {getCardImage(card) ? (
-                <img src={getCardImage(card)} alt="" className="card-grid-image" />
-              ) : null}
-              <span className="card-grid-title">{card.title}</span>
-            </Link>
-            <button
-              className={`card-grid-delete ${pendingId === card.cardId ? 'card-grid-delete--confirm' : ''}`}
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                requestDelete(card.cardId)
-              }}
-              disabled={deleting}
-              aria-label={
-                pendingId === card.cardId ? `Confirm delete ${card.title}` : `Delete ${card.title}`
-              }
-            >
-              {pendingId === card.cardId ? 'Delete?' : '×'}
-            </button>
-          </div>
-        ))}
+        {cards.map((card, index) => {
+          const deleteState = getCardState(card.cardId)
+          const wrapperClass = [
+            'card-grid-wrapper',
+            deleteState === 'deleting' && 'card-grid-wrapper--deleting',
+            deleteState === 'removed' && 'card-grid-wrapper--removed',
+            deleteState === 'error' && 'card-grid-wrapper--error',
+          ]
+            .filter(Boolean)
+            .join(' ')
+
+          const buttonLabel =
+            deleteState === 'confirming'
+              ? 'Delete?'
+              : deleteState === 'deleting'
+                ? '...'
+                : deleteState === 'error'
+                  ? 'Failed'
+                  : '×'
+
+          const buttonClass = [
+            'card-grid-delete',
+            deleteState === 'confirming' && 'card-grid-delete--confirm',
+            deleteState === 'deleting' && 'card-grid-delete--confirm card-grid-delete--deleting',
+            deleteState === 'error' && 'card-grid-delete--confirm card-grid-delete--error',
+          ]
+            .filter(Boolean)
+            .join(' ')
+
+          return (
+            <div key={card.cardId} className={wrapperClass}>
+              <Link
+                to={`/cards/${card.cardId}`}
+                aria-label={card.title}
+                className="card-grid-item"
+                style={{ backgroundColor: CARD_COLORS[index % CARD_COLORS.length] }}
+              >
+                {getCardImage(card) ? (
+                  <img src={getCardImage(card)} alt="" className="card-grid-image" />
+                ) : null}
+                <span className="card-grid-title">{card.title}</span>
+              </Link>
+              <button
+                className={buttonClass}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (deleteState !== 'deleting' && deleteState !== 'removed') {
+                    requestDelete(card.cardId)
+                  }
+                }}
+                disabled={deleteState === 'deleting' || deleteState === 'removed'}
+                aria-label={
+                  deleteState === 'confirming'
+                    ? `Confirm delete ${card.title}`
+                    : `Delete ${card.title}`
+                }
+              >
+                {buttonLabel}
+              </button>
+            </div>
+          )
+        })}
         <button onClick={onAddPlaylist} className="card-grid-add">
           <span className="card-grid-add-icon">+</span>
           <span>Add Playlist</span>
