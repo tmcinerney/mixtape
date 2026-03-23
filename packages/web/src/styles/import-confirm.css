@@ -2,19 +2,20 @@
 .import-confirm {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: var(--space-xl);
+  padding: var(--space-lg) var(--space-md);
 }
 
 .import-confirm-cover {
   display: flex;
   align-items: flex-start;
+  justify-content: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
 }
 
 .import-confirm-cover-img {
-  width: 120px;
-  height: 120px;
+  width: clamp(80px, 20vw, 120px);
+  aspect-ratio: 1;
   object-fit: cover;
   border-radius: var(--radius-sm);
 }
@@ -35,6 +36,7 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
   margin-bottom: var(--space-xs);
+  text-align: center;
 }
 
 .import-confirm-input {
@@ -51,17 +53,19 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin-bottom: var(--space-sm);
+  text-align: center;
 }
 
 .import-confirm-warning {
   font-size: var(--font-size-sm);
   color: var(--color-error);
   margin-bottom: var(--space-sm);
+  text-align: center;
 }
 
 .import-confirm-tracklist {
   list-style: none;
-  max-height: 300px;
+  max-height: min(300px, 40vh);
   overflow-y: auto;
   margin-bottom: var(--space-lg);
   border: 1px solid var(--color-stripe);
@@ -84,6 +88,7 @@
   color: var(--color-text-secondary);
   min-width: 1.5em;
   text-align: right;
+  flex-shrink: 0;
 }
 
 .import-confirm-track-title {
@@ -92,15 +97,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .import-confirm-track-dur {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
+  flex-shrink: 0;
 }
 
 .import-confirm-actions {
   display: flex;
   gap: var(--space-md);
   justify-content: center;
+  flex-wrap: wrap;
 }

@@ -1,7 +1,7 @@
 /* Import progress — two-tier progress display */
 .import-progress {
   text-align: center;
-  padding: var(--space-2xl) 0;
+  padding: var(--space-xl) var(--space-md);
 }
 
 .import-progress-counter {
@@ -11,23 +11,18 @@
   margin-bottom: var(--space-sm);
 }
 
-.import-progress-title {
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-base);
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-lg);
-}
-
 .import-progress-steps {
   display: flex;
   justify-content: center;
-  gap: var(--space-xl);
+  gap: clamp(var(--space-sm), 4vw, var(--space-xl));
+  flex-wrap: wrap;
   margin-bottom: var(--space-xl);
 }
 
 .import-progress-step {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .import-progress-step--active {
@@ -42,10 +37,10 @@
 
 .import-progress-completed {
   list-style: none;
-  max-height: 200px;
+  max-height: min(200px, 30vh);
   overflow-y: auto;
   margin: 0 auto var(--space-lg);
-  max-width: 400px;
+  max-width: min(400px, 100%);
   text-align: left;
 }
 
@@ -69,4 +64,5 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   font-style: italic;
+  flex-shrink: 0;
 }

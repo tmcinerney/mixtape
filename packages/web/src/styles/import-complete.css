@@ -1,7 +1,7 @@
 /* Import complete — summary screen */
 .import-complete {
   text-align: center;
-  padding: var(--space-xl) 0 var(--space-2xl);
+  padding: var(--space-xl) var(--space-md);
   animation: import-complete-enter 0.4s var(--easing-spring) both;
 }
 
@@ -72,7 +72,7 @@
 /* Skipped tracks */
 .import-complete-skipped {
   margin: var(--space-lg) auto;
-  max-width: 380px;
+  width: min(380px, 100%);
   text-align: left;
   background: var(--color-stripe);
   border-radius: var(--radius-sm);
@@ -126,5 +126,6 @@
   display: flex;
   gap: var(--space-sm);
   justify-content: center;
+  flex-wrap: wrap;
   margin-top: var(--space-lg);
 }
