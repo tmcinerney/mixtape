@@ -107,7 +107,10 @@ export function LandingPage() {
         <CreateCardDialog
           open={showCreate}
           onClose={() => setShowCreate(false)}
-          onCreated={() => setShowCreate(false)}
+          onCreated={(cardId) => {
+            setShowCreate(false)
+            navigate(`/cards/${cardId}`)
+          }}
         />
       </div>
     </div>

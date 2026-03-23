@@ -6,11 +6,43 @@ import '../styles/dialog.css'
 interface CreateCardDialogProps {
   open: boolean
   onClose: () => void
-  onCreated: () => void
+  onCreated: (cardId: string) => void
 }
 
-// AIDEV-NOTE: Creates a new empty card via the server's POST /api/cards endpoint.
-// Single source of truth for card creation is yoto-cards.ts on the server.
+// AIDEV-NOTE: 22 images × 8 colors = 176 covers on Yoto CDN.
+// Same set used by cover-matcher.ts on the server.
+const COVER_IMAGES = [
+  'apple',
+  'bee',
+  'book',
+  'cactus',
+  'cat-keytar',
+  'cherries',
+  'cloud',
+  'diamond',
+  'drum',
+  'fish',
+  'flower',
+  'ghost',
+  'ice-cream',
+  'lolly',
+  'microphone',
+  'radio',
+  'rocket',
+  'skull',
+  'star',
+  'strawberry',
+  'sun',
+  'unicorn',
+]
+const COVER_COLORS = ['blue', 'grapefruit', 'green', 'lilac', 'mint', 'orange', 'red', 'yellow']
+
+function randomCoverUrl(): string {
+  const img = COVER_IMAGES[Math.floor(Math.random() * COVER_IMAGES.length)]!
+  const clr = COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)]!
+  return `https://cdn.yoto.io/myo-cover/${img}_${clr}.gif`
+}
+
 export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogProps) {
   const { getAccessTokenSilently } = useAuth0()
   const [title, setTitle] = useState('')
@@ -27,10 +59,10 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
 
     try {
       const token = await getAccessTokenSilently()
-      await createCardApi(title.trim(), token)
+      const cardId = await createCardApi(title.trim(), token, randomCoverUrl())
       setTitle('')
       setCreating(false)
-      onCreated()
+      onCreated(cardId)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create card')
       setCreating(false)
