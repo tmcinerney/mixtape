@@ -17,14 +17,15 @@ describe('GET /api/health', () => {
   })
 })
 
-describe('POST /api/jobs', () => {
+describe('POST /api/jobs/import', () => {
   it('returns SSE stream with init event for a valid request', async () => {
-    const res = await app.request('/api/jobs', {
+    const res = await app.request('/api/jobs/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         cardId: 'card-123',
+        tracks: [{ videoId: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up' }],
         yotoToken: 'tok-abc',
       }),
     })
@@ -32,24 +33,24 @@ describe('POST /api/jobs', () => {
     expect(res.headers.get('content-type')).toContain('text/event-stream')
   })
 
-  it('rejects a non-YouTube URL with 400', async () => {
-    const res = await app.request('/api/jobs', {
+  it('rejects a request with missing required fields with 400', async () => {
+    const res = await app.request('/api/jobs/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        youtubeUrl: 'https://vimeo.com/12345',
-        cardId: 'card-123',
-        yotoToken: 'tok-abc',
-      }),
+      body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=abc' }),
     })
     expect(res.status).toBe(400)
   })
 
-  it('rejects a request with missing fields with 400', async () => {
-    const res = await app.request('/api/jobs', {
+  it('rejects a request missing both cardId and cardTitle with 400', async () => {
+    const res = await app.request('/api/jobs/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ youtubeUrl: 'https://www.youtube.com/watch?v=abc' }),
+      body: JSON.stringify({
+        url: 'https://www.youtube.com/watch?v=abc',
+        tracks: [{ videoId: 'abc', title: 'Track' }],
+        yotoToken: 'tok-abc',
+      }),
     })
     expect(res.status).toBe(400)
   })

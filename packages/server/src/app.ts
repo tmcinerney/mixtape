@@ -3,6 +3,8 @@ import { resolve } from 'node:path'
 import { Hono } from 'hono'
 import { jobRoutes } from './routes/jobs'
 import { iconRoutes } from './routes/icons'
+import { metadataRoutes } from './routes/metadata'
+import { coverRoutes } from './routes/cover'
 import { serveStatic } from './static'
 
 // AIDEV-NOTE: Read version from root package.json — bump on each release
@@ -31,6 +33,12 @@ export function createApp() {
 
   // Icon suggestion route: GET /api/suggest-icon
   app.route('', iconRoutes)
+
+  // Metadata extraction: GET /api/metadata?url=...
+  app.route('', metadataRoutes)
+
+  // Cover matching: GET /api/cover/match?title=...
+  app.route('', coverRoutes)
 
   // AIDEV-NOTE: Static serving only when built web assets exist (production or after build)
   if (process.env['NODE_ENV'] === 'production' || existsSync(WEB_DIST_PATH)) {

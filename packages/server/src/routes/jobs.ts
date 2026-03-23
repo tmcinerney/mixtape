@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { streamSSE } from 'hono/streaming'
-import { JobRequestSchema } from '@mixtape/shared'
-import type { JobProgress } from '@mixtape/shared'
+import { ImportJobRequestSchema } from '@mixtape/shared'
+import type { ImportProgress } from '@mixtape/shared'
 import { JobQueue } from '../job-queue'
-import { runJob } from '../job-runner'
+import { runImport } from '../import-runner'
 
 // AIDEV-NOTE: Single shared queue instance for the server process.
 // Max 3 concurrent jobs, cleanup after 5 minutes.
@@ -15,34 +15,61 @@ const queue = new JobQueue({
 
 const app = new Hono()
 
-app.post('/api/jobs', zValidator('json', JobRequestSchema), (c) => {
+// AIDEV-NOTE: Token expiry check uses simple base64 decode of JWT payload — no crypto needed.
+// If remaining token lifetime < trackCount * 30s we warn but still proceed.
+function getTokenExpiry(authHeader: string | undefined): number | null {
+  if (!authHeader) return null
+  const token = authHeader.replace('Bearer ', '')
+  const parts = token.split('.')
+  if (parts.length < 2) return null
+  try {
+    const payload = JSON.parse(atob(parts[1]!)) as { exp?: number }
+    return payload.exp ?? null
+  } catch {
+    return null
+  }
+}
+
+app.post('/api/jobs/import', zValidator('json', ImportJobRequestSchema), (c) => {
   const body = c.req.valid('json')
 
   return streamSSE(c, async (stream) => {
+    // AIDEV-NOTE: Warn if JWT will expire before estimated import completes (~30s per track).
+    const exp = getTokenExpiry(c.req.header('Authorization'))
+    const nowSecs = Math.floor(Date.now() / 1000)
+    if (exp !== null && exp - nowSecs < body.tracks.length * 30) {
+      await stream.writeSSE({
+        data: JSON.stringify({ warning: 'Token may expire before import completes' }),
+        event: 'warning',
+      })
+    }
+
     const jobId = queue.enqueue(body)
 
     // Send initial event with job ID
     await stream.writeSSE({ data: JSON.stringify({ jobId }), event: 'init' })
 
-    // Wait for the job to be promoted to running
     const entry = queue.getEntry(jobId)
     if (!entry) {
       await stream.writeSSE({
-        data: JSON.stringify({ step: 'error', message: 'Job not found', code: 'QUEUE_ERROR' }),
+        data: JSON.stringify({ type: 'error', message: 'Job not found' }),
         event: 'progress',
       })
       return
     }
 
-    const onEvent = async (event: JobProgress) => {
+    const onEvent = async (event: ImportProgress) => {
       await stream.writeSSE({ data: JSON.stringify(event), event: 'progress' })
     }
 
     try {
-      await runJob(
+      await runImport(
         {
-          youtubeUrl: body.youtubeUrl,
+          url: body.url,
           cardId: body.cardId,
+          cardTitle: body.cardTitle,
+          coverUrl: body.coverUrl,
+          tracks: body.tracks,
           yotoToken: body.yotoToken,
         },
         onEvent,
@@ -68,7 +95,7 @@ app.get('/api/jobs', (c) => {
   const jobs = queue.listJobs().map((j) => ({
     id: j.id,
     status: j.status,
-    youtubeUrl: j.request.youtubeUrl,
+    url: j.request.url,
     cardId: j.request.cardId,
     createdAt: j.createdAt,
   }))
