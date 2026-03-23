@@ -44,10 +44,11 @@ function makeMockEventSource() {
       listeners[type].push(cb)
     }),
     close: vi.fn(),
-    // Helper to fire an event from test code
-    emit(type: string, data: unknown) {
-      const cbs = listeners[type] ?? []
-      const event = new MessageEvent(type, { data: JSON.stringify(data) })
+    // AIDEV-NOTE: Server sends all events as SSE event type 'progress' with the
+    // discriminated type inside the JSON data. The emit helper mirrors this.
+    emit(_type: string, data: unknown) {
+      const cbs = listeners['progress'] ?? []
+      const event = new MessageEvent('progress', { data: JSON.stringify(data) })
       cbs.forEach((cb) => cb(event))
     },
   }

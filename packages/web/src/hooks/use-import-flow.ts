@@ -137,10 +137,14 @@ export function useImportFlow(): ImportFlowResult {
   // AIDEV-NOTE: Listens to the SSE event stream from startImport and maps each
   // event type to state/progress updates. Uses named event types (not 'progress'
   // like startJob) because the import stream uses typed SSE events.
+  // AIDEV-NOTE: Server sends all SSE events with `event: 'progress'` and the
+  // discriminated type field is inside the JSON data. We listen for 'progress'
+  // and switch on `data.type`, matching the ImportProgressSchema union.
   const listenToImportStream = useCallback((eventSource: EventTarget & { close: () => void }) => {
-    const handleEvent = (type: string) => (event: Event) => {
+    eventSource.addEventListener('progress', (event: Event) => {
       try {
         const data = JSON.parse((event as MessageEvent).data as string) as Record<string, unknown>
+        const type = data.type as string
 
         switch (type) {
           case 'card-created':
@@ -226,27 +230,11 @@ export function useImportFlow(): ImportFlowResult {
       } catch {
         // ignore parse errors on individual events
       }
-    }
-
-    const eventTypes = [
-      'card-created',
-      'track-start',
-      'track-progress',
-      'track-complete',
-      'track-skipped',
-      'complete',
-      'cancelled',
-      'error',
-    ]
-
-    for (const type of eventTypes) {
-      eventSource.addEventListener(type, handleEvent(type))
-    }
+    })
 
     // AIDEV-NOTE: The generic 'error' EventTarget event fires when the SSE
     // connection drops unexpectedly (not the same as the named 'error' SSE
-    // event above which carries a message payload). We only set 'Connection
-    // lost' here if the error state hasn't already been set by the typed handler.
+    // event above which carries a message payload).
     eventSource.addEventListener('error', (e: Event) => {
       if (!(e instanceof MessageEvent)) {
         setError((prev) => prev ?? 'Connection lost')
