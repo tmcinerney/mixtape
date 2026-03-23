@@ -20,7 +20,8 @@
   position: relative;
 }
 
-.card-grid-item:hover {
+/* AIDEV-NOTE: Hover on wrapper (not item) so delete button doesn't break hover */
+.card-grid-wrapper:hover .card-grid-item {
   transform: scale(1.02);
   text-decoration: none;
 }
@@ -138,7 +139,6 @@
 
 .card-grid-delete:hover {
   opacity: 1;
-  transform: scale(1.2);
 }
 
 .card-grid-delete--confirm {
@@ -153,7 +153,6 @@
 
 .card-grid-delete--confirm:hover {
   filter: brightness(0.9);
-  transform: none;
 }
 
 /* Responsive — tablet and below: 2-column grid with larger cards */
