@@ -1,0 +1,106 @@
+/* Import confirm — pre-download confirmation screen */
+.import-confirm {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.import-confirm-cover {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.import-confirm-cover-img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.import-confirm-cover-cycle {
+  font-size: var(--font-size-lg);
+  padding: var(--space-xs);
+}
+
+.import-confirm-field {
+  display: block;
+  margin-bottom: var(--space-md);
+}
+
+.import-confirm-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.import-confirm-input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.import-confirm-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+.import-confirm-warning {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin-bottom: var(--space-sm);
+}
+
+.import-confirm-tracklist {
+  list-style: none;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--color-stripe);
+  border-radius: var(--radius-sm);
+}
+
+.import-confirm-track {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.import-confirm-track:nth-child(even) {
+  background: var(--color-stripe);
+}
+
+.import-confirm-track-num {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  min-width: 1.5em;
+  text-align: right;
+}
+
+.import-confirm-track-title {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-confirm-track-dur {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.import-confirm-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}

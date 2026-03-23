@@ -1,0 +1,20 @@
+/* Disambiguation — two-button choice prompt */
+.disambiguation {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+}
+
+.disambiguation h2 {
+  margin-bottom: var(--space-sm);
+}
+
+.disambiguation-hint {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+.disambiguation-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}

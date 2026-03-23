@@ -1,0 +1,46 @@
+/* Import complete — summary screen */
+.import-complete {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+}
+
+.import-complete h2 {
+  color: var(--color-success);
+  margin-bottom: var(--space-md);
+}
+
+.import-complete-skipped {
+  margin: var(--space-md) auto var(--space-lg);
+  max-width: 400px;
+  text-align: left;
+}
+
+.import-complete-skipped h3 {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+.import-complete-skipped ul {
+  list-style: none;
+}
+
+.import-complete-skipped-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  font-size: var(--font-size-sm);
+}
+
+.import-complete-skipped-reason {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-size: var(--font-size-xs);
+}
+
+.import-complete-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}
