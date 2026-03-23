@@ -1,7 +1,7 @@
 // AIDEV-NOTE: Yoto API base from yoto.dev/api docs — same as yoto-upload.ts
 const YOTO_API_BASE = 'https://api.yotoplay.com'
 
-// AIDEV-NOTE: Card defaults from use-add-track.ts — matching the official MYO portal
+// AIDEV-NOTE: Card defaults matching the official MYO portal structure
 const MYO_CARD_DEFAULTS = {
   activity: 'yoto_Player',
   restricted: true,
@@ -55,7 +55,7 @@ export async function addChapterToCard(
   const content = (card.content ?? {}) as Record<string, unknown>
   const chapters = ((content.chapters ?? []) as unknown[]).slice()
 
-  // Build new chapter (same structure as use-add-track.ts)
+  // Build new chapter
   const paddedKey = String(chapter.index).padStart(2, '0')
   const newChapter = {
     key: paddedKey,

@@ -1,4 +1,4 @@
-import type { JobRequest, MetadataResponse, ImportJobRequest } from '@mixtape/shared'
+import type { MetadataResponse, ImportJobRequest } from '@mixtape/shared'
 
 // AIDEV-NOTE: MetadataResult covers both typed responses (video/playlist) and the
 // ambiguous case where the URL points to both a video and a playlist simultaneously.
@@ -62,69 +62,6 @@ interface JobStream extends EventTarget {
   close: () => void
 }
 
-export async function startJob(
-  params: JobRequest,
-  _token: string,
-): Promise<{ jobId: string; eventSource: JobStream }> {
-  const controller = new AbortController()
-
-  const res = await fetch(`${API_BASE}/jobs`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params),
-    signal: controller.signal,
-  })
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Failed to start job: ${res.status} ${text}`)
-  }
-
-  if (!res.body) {
-    throw new Error('No response body for SSE stream')
-  }
-
-  // AIDEV-NOTE: We parse the SSE stream to extract the jobId from the init
-  // event, then continue forwarding progress events to the consumer.
-  const target = new EventTarget()
-  const stream: JobStream = Object.assign(target, {
-    close: () => controller.abort(),
-  })
-
-  // Start parsing in background
-  parseSSEStream(res.body, target, controller.signal)
-
-  // Wait for the init event to get the jobId
-  const jobId = await new Promise<string>((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('Timeout waiting for job init')), 10000)
-
-    target.addEventListener(
-      'init',
-      (e) => {
-        clearTimeout(timeout)
-        try {
-          const data = JSON.parse((e as MessageEvent).data as string) as { jobId: string }
-          resolve(data.jobId)
-        } catch {
-          reject(new Error('Failed to parse init event'))
-        }
-      },
-      { once: true },
-    )
-
-    target.addEventListener(
-      'error',
-      () => {
-        clearTimeout(timeout)
-        reject(new Error('Stream error before init'))
-      },
-      { once: true },
-    )
-  })
-
-  return { jobId, eventSource: stream }
-}
-
 export async function cancelJob(jobId: string, token: string): Promise<void> {
   const res = await fetch(`${API_BASE}/jobs/${jobId}`, {
     method: 'DELETE',
@@ -180,8 +117,8 @@ export async function startImport(
     throw new Error('No response body for SSE stream')
   }
 
-  // AIDEV-NOTE: Same SSE pattern as startJob — parse the stream into an EventTarget
-  // so callers can listen for progress events via addEventListener().
+  // AIDEV-NOTE: Parse the SSE stream into an EventTarget so callers can listen
+  // for progress events via addEventListener().
   const target = new EventTarget()
   const stream: JobStream = Object.assign(target, {
     close: () => controller.abort(),

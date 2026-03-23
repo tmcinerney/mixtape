@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 // AIDEV-NOTE: loginWithRedirect removed — sign-in now handled by header button
-// and upload flow hook (use-upload-flow.ts line 66-72)
 import { useYotoQuery } from '../hooks/use-yoto-query'
 import { ErrorState } from './error-state'
 import { CardGridSkeleton } from './skeleton'
