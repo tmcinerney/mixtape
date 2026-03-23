@@ -18,7 +18,9 @@ export async function createCard(
   coverUrl: string | undefined,
   token: string,
 ): Promise<string> {
-  const metadata: Record<string, unknown> = { title }
+  // AIDEV-NOTE: Yoto API expects `title` at top level (not inside metadata).
+  // Cover image goes in metadata.cover.imageL.
+  const metadata: Record<string, unknown> = {}
   if (coverUrl) {
     metadata.cover = { imageL: coverUrl }
   }
@@ -30,6 +32,7 @@ export async function createCard(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      title,
       content: { ...MYO_CARD_DEFAULTS, config: MYO_CONFIG_DEFAULTS, chapters: [] },
       metadata,
     }),

@@ -48,7 +48,7 @@ describe('createCard', () => {
     expect(body.content.version).toBe('1')
     expect(body.content.chapters).toEqual([])
     expect(body.content.config.resumeTimeout).toBe(2592000)
-    expect(body.metadata.title).toBe('My Playlist')
+    expect(body.title).toBe('My Playlist')
   })
 
   it('returns cardId from response', async () => {
