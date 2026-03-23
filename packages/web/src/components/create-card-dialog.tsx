@@ -26,22 +26,22 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
     setError(null)
 
     try {
-      const newCard: YotoJson = {
+      // AIDEV-NOTE: Use the same payload shape as our server-side createCard.
+      // The SDK's updateCard sends POST /content which does an upsert.
+      // Title must be top-level, not in metadata.
+      const newCard = {
+        title: title.trim(),
         content: {
-          activity: 'none',
-          editTracksDisabled: false,
-          chapters: {},
-          config: { onlineOnly: true },
-          version: 2,
-          restricted: false,
+          activity: 'yoto_Player',
+          restricted: true,
+          version: '1',
+          chapters: [],
+          config: { resumeTimeout: 2592000, onlineOnly: false },
         },
-        metadata: {
-          title: title.trim(),
-          color: '#6366F1',
-        },
+        metadata: {},
       }
 
-      await sdk.content.updateCard(newCard)
+      await sdk.content.updateCard(newCard as unknown as YotoJson)
 
       setTitle('')
       setCreating(false)
