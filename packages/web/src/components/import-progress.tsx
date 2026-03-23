@@ -47,8 +47,6 @@ export function ImportProgress({
         </p>
       )}
 
-      <p className="import-progress-title">{currentTitle}</p>
-
       {trackProgress && (
         <div className="import-progress-steps" role="group" aria-label="Track progress">
           {STEPS.map((step) => {
