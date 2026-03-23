@@ -106,8 +106,14 @@ export function CardGrid({ onAddPlaylist }: CardGridProps) {
     return <ErrorState message={`Failed to load cards: ${error}`} onRetry={refetch} />
   }
 
-  if (loading || !cards) {
+  // AIDEV-NOTE: Only show skeleton on initial load, not during refetch.
+  // Keeps existing cards visible while refreshing after delete/create.
+  if (!cards && loading) {
     return <CardGridSkeleton />
+  }
+
+  if (!cards) {
+    return null
   }
 
   return (
