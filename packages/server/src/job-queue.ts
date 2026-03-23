@@ -1,14 +1,17 @@
 import type { JobStatus } from '@mixtape/shared'
 
-export interface JobRequest {
-  youtubeUrl: string
-  cardId: string
+export interface ImportRequest {
+  url: string
+  cardId?: string
+  cardTitle?: string
+  coverUrl?: string
+  tracks: Array<{ videoId: string; title: string }>
   yotoToken: string
 }
 
 export interface JobEntry {
   id: string
-  request: JobRequest
+  request: ImportRequest
   status: JobStatus
   abortController: AbortController
   createdAt: number
@@ -34,7 +37,7 @@ export class JobQueue {
     this.onStart = options.onStart
   }
 
-  enqueue(request: JobRequest): string {
+  enqueue(request: ImportRequest): string {
     const id = crypto.randomUUID()
     const entry: JobEntry = {
       id,
