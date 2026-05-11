@@ -14,7 +14,7 @@ interface CardWithMetadata {
   cardId: string
   title: string
   cover?: { imageS?: string; imageM?: string; imageL?: string }
-  metadata?: { cover?: { imageL?: string } }
+  metadata?: { cover?: { imageL?: string }; icon?: string }
 }
 
 interface CardGridProps {
@@ -26,7 +26,11 @@ const CARD_COLORS = ['#6366F1', '#14B8A6', '#F59E0B', '#22C55E', '#EC4899', '#8B
 
 function getCardImage(card: CardWithMetadata): string | undefined {
   return (
-    card.cover?.imageL ?? card.cover?.imageM ?? card.cover?.imageS ?? card.metadata?.cover?.imageL
+    card.cover?.imageL ??
+    card.cover?.imageM ??
+    card.cover?.imageS ??
+    card.metadata?.cover?.imageL ??
+    card.metadata?.icon
   )
 }
 

@@ -39,7 +39,7 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
       },
       metadata: {
         title: title.trim(),
-        icon: icon?.url ?? '',
+        ...(icon ? { icon: icon.url } : {}),
         color: '#6366F1',
       },
     }
