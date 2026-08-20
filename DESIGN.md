@@ -51,6 +51,8 @@ Requested scopes, which must all be ticked on the dashboard.yoto.dev app:
 
 Yoto grants no `profile` scope, so there is no ID token and no user profile. The app shows no name, email, or avatar image.
 
+Yoto also refuses `offline_access`, and Auth0 issues a refresh token only when that scope is granted. **The app therefore cannot refresh tokens.** A session ends when its access token expires, and `auth-client.ts` clears it on a timer so the header returns to "Sign in". Signing back in costs one redirect and no password, because the Yoto SSO session outlives our access token.
+
 ### 3. Lightweight Card Management
 
 Not a My Yoto replacement — just enough to complete the upload flow:
@@ -150,7 +152,7 @@ mixtape/
 - [x] Backend framework → **Hono + Zod**
 - [x] Progress reporting → **SSE**
 - [x] Error handling → **Specific yt-dlp error mapping**
-- [x] PKCE token refresh → **Proactive silent refresh** on a timer in `auth-client.ts`, scheduled 60s before expiry, with concurrent calls collapsed into one request
+- [x] PKCE token refresh → **Not possible.** Yoto refuses `offline_access`, so no refresh token is ever issued. `auth-client.ts` clears the session on a timer at expiry and the user signs in again via SSO.
 - [x] Upload flow → **Backend handles full pipeline** (frontend passes token per-job)
 - [x] Backend rate limiting → **In-memory queue, max 3 concurrent jobs**
 - [x] Which homelab host → **apollo**

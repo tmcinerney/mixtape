@@ -46,14 +46,16 @@ describe('YOTO_SCOPES', () => {
   // AIDEV-NOTE: This is THE regression test. Login broke because the app asked for
   // `openid` and `profile`, which Yoto's scope migration stopped pre-approving.
   // @auth0/auth0-spa-js injected `openid` unconditionally, which is why it had to go.
-  it('never requests openid or profile', () => {
+  // AIDEV-NOTE: Each of these three was rejected by Yoto in turn during the migration.
+  // openid + profile broke the original login; offline_access broke the first fix.
+  it('never requests a scope Yoto refuses to pre-approve', () => {
     expect(YOTO_SCOPES).not.toMatch(/\bopenid\b/)
     expect(YOTO_SCOPES).not.toMatch(/\bprofile\b/)
+    expect(YOTO_SCOPES).not.toMatch(/\boffline_access\b/)
   })
 
   it('requests exactly the scopes the app uses', () => {
     expect(YOTO_SCOPES.split(' ').sort()).toEqual([
-      'offline_access',
       'user:content:manage',
       'user:content:view',
       'user:icons:manage',
@@ -231,9 +233,9 @@ describe('getAccessTokenSilently', () => {
     expect(client.isAuthenticated()).toBe(false)
   })
 
-  it('gives up cleanly when offline_access was never granted', async () => {
+  it('gives up cleanly with no refresh token, which is the normal Yoto case', async () => {
     const client = clientWithExpiredSession(null)
-    await expect(client.getAccessTokenSilently()).rejects.toThrow(/no refresh token/)
+    await expect(client.getAccessTokenSilently()).rejects.toThrow(/sign in again/)
     expect(client.isAuthenticated()).toBe(false)
   })
 
@@ -287,7 +289,10 @@ describe('proactive refresh', () => {
     client.logout()
   })
 
-  it('arms no timer when there is no refresh token', () => {
+  // AIDEV-NOTE: The live Yoto behaviour. No offline_access means no refresh token, so
+  // the session must end cleanly at expiry rather than leave the card grid rendering
+  // against a dead token.
+  it('signs the user out at expiry when it cannot refresh', () => {
     localStorage.setItem(
       'mixtape.yoto.session',
       JSON.stringify({
@@ -299,11 +304,13 @@ describe('proactive refresh', () => {
     )
     const fetchMock = vi.spyOn(globalThis, 'fetch')
     const client = new AuthClient()
+    expect(client.isAuthenticated()).toBe(true)
 
-    vi.advanceTimersByTime(600_000)
+    vi.advanceTimersByTime(61_000)
 
+    expect(client.isAuthenticated()).toBe(false)
+    // It must sign out locally, never attempt a doomed refresh call.
     expect(fetchMock).not.toHaveBeenCalled()
-    client.logout()
   })
 })
 

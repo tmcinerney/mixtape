@@ -17,8 +17,14 @@ export const YOTO_AUDIENCE = 'https://api.yotoplay.com'
 //   user:content:view   -> content.getMyCards, content.getCard
 //   user:content:manage -> content.updateCard + the server's media upload
 //   user:icons:manage   -> icons.getDisplayIcons
-//   offline_access      -> refresh tokens. Implicitly granted, not on the tick list.
-export const YOTO_SCOPES = 'user:content:view user:content:manage user:icons:manage offline_access'
+//
+// `offline_access` is deliberately absent. Yoto rejects it outright: "scopes that have
+// not been pre-approved: offline_access" (verified 2026-08-20). Auth0 only issues a
+// refresh token when offline_access is granted, so this app CANNOT refresh. A session
+// ends when its access token expires and the user signs in again. The hidden-iframe
+// prompt=none fallback is not viable either: login.yotoplay.com is a third-party
+// origin to mixtape.trav.cloud, so browsers block its cookies.
+export const YOTO_SCOPES = 'user:content:view user:content:manage user:icons:manage'
 
 // AIDEV-NOTE: Public OAuth client id — safe to ship in the bundle, it is visible in
 // the authorize redirect regardless. Override at build time with VITE_YOTO_CLIENT_ID.
@@ -143,9 +149,10 @@ export class AuthClient {
   // against a rotating refresh token invalidate each other and log the user out.
   #refreshInFlight: Promise<string> | null = null
   #loading = false
-  // AIDEV-NOTE: Proactive refresh timer. Without it nothing renews the token until
-  // something calls getAccessTokenSilently, and useYotoQuery never does — so an app
-  // left open past expiry 401s on the next card click instead of staying signed in.
+  // AIDEV-NOTE: Expiry timer. Given a refresh token it renews; without one (the current
+  // Yoto reality, see YOTO_SCOPES) it clears the session at expiry so the UI flips to
+  // "Sign in". Otherwise useYotoQuery — which never asks for a token — keeps rendering
+  // a card grid whose every request 401s.
   #refreshTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor() {
@@ -159,14 +166,20 @@ export class AuthClient {
     }
 
     const session = this.#session
-    if (!session?.refreshToken) return
+    if (!session) return
 
-    // Clamped at 0, so a session restored after expiry refreshes on the next tick.
+    // Clamped at 0, so a session restored after expiry settles on the next tick.
     const delay = Math.max(0, session.expiresAt - Date.now() - EXPIRY_SKEW_MS)
+    const canRefresh = session.refreshToken !== null
+
     this.#refreshTimer = setTimeout(() => {
       this.#refreshTimer = null
-      // Errors are already handled by #refresh, which clears the session.
-      void this.getAccessTokenSilently().catch(() => {})
+      if (canRefresh) {
+        // Errors are already handled by #refresh, which clears the session.
+        void this.getAccessTokenSilently().catch(() => {})
+      } else {
+        this.#setSession(null)
+      }
     }, delay)
   }
 
@@ -296,11 +309,12 @@ export class AuthClient {
 
   async #refresh(session: Session): Promise<string> {
     if (!session.refreshToken) {
-      // AIDEV-NOTE: No refresh token means offline_access was not granted. Clearing
-      // here surfaces as isAuthenticated=false so the UI prompts a fresh login,
-      // instead of looping on 401s.
+      // AIDEV-NOTE: The normal path with Yoto, which grants no offline_access. Clearing
+      // surfaces as isAuthenticated=false so the UI prompts a fresh login instead of
+      // looping on 401s. Re-login needs no password, since the Yoto SSO session
+      // outlives our access token.
       this.#setSession(null)
-      throw new AuthError('Session expired and no refresh token is available', 'login_required')
+      throw new AuthError('Session expired — please sign in again', 'login_required')
     }
 
     try {
