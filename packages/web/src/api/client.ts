@@ -8,7 +8,10 @@ const API_BASE = '/api'
 function parseSSEStream(
   reader: ReadableStream<Uint8Array>,
   target: EventTarget,
-  signal?: AbortSignal,
+  signal: AbortSignal | undefined,
+  // AIDEV-NOTE: Called when the stream ends on its own. A clean close is NOT success:
+  // the server may have gone away mid-job. See the caller.
+  onStreamEnd: () => void,
 ) {
   const decoder = new TextDecoder()
   const streamReader = reader.getReader()
@@ -24,7 +27,10 @@ function parseSSEStream(
       }
 
       const { done, value } = await streamReader.read()
-      if (done) return
+      if (done) {
+        onStreamEnd()
+        return
+      }
 
       buffer += decoder.decode(value, { stream: true })
       const lines = buffer.split('\n')
@@ -81,12 +87,26 @@ export async function startJob(
   // AIDEV-NOTE: We parse the SSE stream to extract the jobId from the init
   // event, then continue forwarding progress events to the consumer.
   const target = new EventTarget()
+  // AIDEV-NOTE: Set once the consumer closes the stream, which it does on a terminal
+  // `complete` or `error` event. Distinguishes an expected close from the server or a
+  // proxy dropping the connection mid-job.
+  let closedByConsumer = false
   const stream: JobStream = Object.assign(target, {
-    close: () => controller.abort(),
+    close: () => {
+      closedByConsumer = true
+      controller.abort()
+    },
   })
 
   // Start parsing in background
-  parseSSEStream(res.body, target, controller.signal)
+  parseSSEStream(res.body, target, controller.signal, () => {
+    // AIDEV-NOTE: The pump used to `return` silently here, so a dropped connection left
+    // the UI frozen on the last percentage with no error and no timeout. Only the
+    // `pump().catch` path signalled anything, and a clean close does not throw.
+    if (!closedByConsumer) {
+      target.dispatchEvent(new Event('error'))
+    }
+  })
 
   // Wait for the init event to get the jobId
   const jobId = await new Promise<string>((resolve, reject) => {

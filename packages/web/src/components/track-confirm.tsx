@@ -85,13 +85,35 @@ export function TrackConfirm({ data, onConfirm, onCancel }: TrackConfirmProps) {
 
       <div className="track-confirm-field">
         <span className="track-confirm-label">Icon (optional)</span>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => setShowIconPicker(!showIconPicker)}
-        >
-          {icon ? `Icon: ${icon.title}` : 'Choose icon'}
-        </button>
+        <div className="track-confirm-icon-row">
+          <button
+            type="button"
+            className="btn-secondary track-confirm-icon-btn"
+            onClick={() => setShowIconPicker(!showIconPicker)}
+          >
+            {/* AIDEV-NOTE: Show the icon itself, not just its name. These are the 16x16
+                pixel-art icons that end up on the player, so the name alone tells the
+                user very little about what they picked. */}
+            {icon ? (
+              <>
+                <img src={icon.url} alt="" className="track-confirm-icon-preview" />
+                <span>{icon.title}</span>
+              </>
+            ) : (
+              'Choose icon'
+            )}
+          </button>
+          {icon ? (
+            <button
+              type="button"
+              className="track-confirm-icon-clear"
+              onClick={() => setIcon(null)}
+              aria-label="Remove icon"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
         {showIconPicker ? (
           <div className="track-confirm-icon-picker">
             <IconPicker

@@ -106,6 +106,12 @@ async function pollTranscode(
 ): Promise<string> {
   onProgress('transcode', 0)
   const startTime = Date.now()
+  // AIDEV-NOTE: Yoto stops moving `percent` near the end of a transcode. Emitting only
+  // on change left the SSE stream silent for minutes, and Traefik's default 180s idle
+  // timeout reaps an idle connection. Re-emitting the last value every poll (10s) keeps
+  // bytes flowing. Done here rather than with a heartbeat timer on purpose: a concurrent
+  // writeSSE could interleave with a real event and corrupt the SSE framing.
+  let lastPercent = 0
 
   while (Date.now() - startTime < timeoutMs) {
     const statusResponse = await fetch(
@@ -131,8 +137,9 @@ async function pollTranscode(
     }
 
     if (data.progress?.percent) {
-      onProgress('transcode', data.progress.percent)
+      lastPercent = data.progress.percent
     }
+    onProgress('transcode', lastPercent)
 
     await new Promise((r) => setTimeout(r, pollIntervalMs))
   }
