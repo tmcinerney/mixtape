@@ -70,6 +70,53 @@ describe('useAddTrack', () => {
     )
   })
 
+  // AIDEV-NOTE: Regression test. The chain used to pass icon.url straight through to
+  // display.icon16x16, and the Yoto API rejected it with 400: `icon16x16 must be in
+  // format "yoto:#{mediaId}" where mediaId is 43 characters`. The parameter was named
+  // iconUrl all the way down, which is what made the wrong value look right.
+  it('sends the icon as a yoto ref, never a URL', async () => {
+    mockGetCard.mockResolvedValue({ content: { chapters: [] }, metadata: {} })
+    mockUpdateCard.mockResolvedValue(undefined)
+
+    const ref = 'yoto:#zH4Xk1YQ0mN7bC2vR8sT5wL3pJ6dF9gA0eB1uI4oK7x'
+
+    const { result } = renderHook(() => useAddTrack())
+    await act(async () => {
+      await result.current.addTrack({
+        cardId: 'card-1',
+        mediaUrl: 'https://media.yoto.io/some-file.opus',
+        title: 'My Track',
+        iconRef: ref,
+      })
+    })
+
+    const payload = mockUpdateCard.mock.calls[0]![0] as { content: Record<string, unknown> }
+    const chapters = payload.content.chapters as { display?: { icon16x16?: string } }[]
+
+    expect(chapters[0]!.display?.icon16x16).toBe(ref)
+    expect(chapters[0]!.display?.icon16x16).not.toMatch(/^https?:/)
+  })
+
+  it('omits display entirely when no icon is chosen', async () => {
+    mockGetCard.mockResolvedValue({ content: { chapters: [] }, metadata: {} })
+    mockUpdateCard.mockResolvedValue(undefined)
+
+    const { result } = renderHook(() => useAddTrack())
+    await act(async () => {
+      await result.current.addTrack({
+        cardId: 'card-1',
+        mediaUrl: 'https://media.yoto.io/some-file.opus',
+        title: 'My Track',
+      })
+    })
+
+    const payload = mockUpdateCard.mock.calls[0]![0] as { content: Record<string, unknown> }
+    const chapters = payload.content.chapters as Record<string, unknown>[]
+
+    // An empty-string icon16x16 is rejected too, so the key must be absent.
+    expect(chapters[0]).not.toHaveProperty('display')
+  })
+
   it('appends a track after existing chapters', async () => {
     mockGetCard.mockResolvedValue({
       content: {

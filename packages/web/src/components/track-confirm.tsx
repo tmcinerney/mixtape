@@ -9,7 +9,7 @@ const HARD_LIMIT = 100
 
 interface TrackConfirmProps {
   data: ConfirmData
-  onConfirm: (title: string, iconUrl?: string) => void
+  onConfirm: (title: string, iconRef?: string) => void
   onCancel: () => void
 }
 
@@ -30,7 +30,11 @@ export function TrackConfirm({ data, onConfirm, onCancel }: TrackConfirmProps) {
   const handleConfirm = () => {
     const trimmed = title.trim()
     if (!trimmed) return
-    onConfirm(trimmed, icon?.url)
+    // AIDEV-NOTE: Must be the `yoto:#{mediaId}` ref, NEVER icon.url. The Yoto API
+    // rejects a plain URL here with 400: `icon16x16 must be in format
+    // "yoto:#{mediaId}" where mediaId is 43 characters`. icon.url is for rendering
+    // only — see use-icons.ts, which maps ref -> url for exactly that purpose.
+    onConfirm(trimmed, icon ? `yoto:#${icon.mediaId}` : undefined)
   }
 
   const useOriginal = () => {
