@@ -51,6 +51,32 @@ describe('UploadProgress', () => {
     expect(screen.getByText('Upload')).toHaveAttribute('aria-current', 'step')
   })
 
+  // AIDEV-NOTE: YouTube URLs arrive with tracking junk appended (`&pp=ygUb...`), which
+  // wrapped across two lines on the processing screen and told the user nothing.
+  it('strips tracking parameters from the displayed URL', () => {
+    render(
+      <UploadProgress
+        progress={null}
+        title="https://www.youtube.com/watch?v=Zu5EOcd-L4U&pp=ygUbc2xlZXB5IHN0b3JpZXM"
+        onCancel={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('youtube.com/watch?v=Zu5EOcd-L4U')).toBeInTheDocument()
+    expect(screen.queryByText(/pp=/)).not.toBeInTheDocument()
+  })
+
+  it('leaves a non-URL title alone', () => {
+    render(<UploadProgress progress={null} title="Milo the Sleepy Mouse" onCancel={vi.fn()} />)
+    expect(screen.getByText('Milo the Sleepy Mouse')).toBeInTheDocument()
+  })
+
+  // AIDEV-NOTE: yt-dlp takes a few seconds to emit its first progress line. Every label
+  // rendered grey until then, so the screen looked stalled just as work began.
+  it('marks download active before the first progress event', () => {
+    render(<UploadProgress progress={null} title="Test" onCancel={vi.fn()} />)
+    expect(screen.getByText('Download')).toHaveClass('upload-step-label--active')
+  })
+
   it('calls onCancel when cancel link is clicked', () => {
     const onCancel = vi.fn()
     render(<UploadProgress progress={null} title="Test" onCancel={onCancel} />)

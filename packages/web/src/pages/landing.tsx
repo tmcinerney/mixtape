@@ -71,7 +71,7 @@ export function LandingPage() {
 
         {flow.state === 'complete' ? (
           <UploadConfirmation
-            cardName={flow.cardId ?? 'Card'}
+            cardName={flow.cardTitle ?? flow.cardId ?? 'your card'}
             trackTitle={confirmedTitleRef.current}
             cardId={flow.cardId ?? ''}
             onViewCard={(id) => navigate(`/cards/${id}`)}

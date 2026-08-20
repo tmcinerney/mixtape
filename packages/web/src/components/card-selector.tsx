@@ -9,7 +9,9 @@ interface Card {
 }
 
 interface CardSelectorProps {
-  onSelect: (cardId: string) => void
+  // AIDEV-NOTE: The title comes along because the success screen needs a human
+  // name. It used to print the raw cardId, e.g. "added to bzsiy".
+  onSelect: (cardId: string, cardTitle: string) => void
   onCancel: () => void
 }
 
@@ -54,7 +56,10 @@ export function CardSelector({ onSelect, onCancel }: CardSelectorProps) {
         <ul className="card-selector-list">
           {cards.map((card) => (
             <li key={card.cardId} className="card-selector-item">
-              <button className="card-selector-btn" onClick={() => onSelect(card.cardId)}>
+              <button
+                className="card-selector-btn"
+                onClick={() => onSelect(card.cardId, card.title)}
+              >
                 {card.title}
               </button>
             </li>

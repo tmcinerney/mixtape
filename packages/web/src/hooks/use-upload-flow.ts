@@ -37,12 +37,14 @@ interface UploadFlowResult {
   state: FlowState
   youtubeUrl: string | null
   cardId: string | null
+  /** Human-readable card name, for display. Falls back to null if unknown. */
+  cardTitle: string | null
   progress: JobProgress | null
   error: string | null
   /** Available when state === 'confirming' */
   confirmData: ConfirmData | null
   submitUrl: (url: string) => void
-  selectCard: (cardId: string) => void
+  selectCard: (cardId: string, cardTitle?: string) => void
   /** User confirms the track title and optional icon ref */
   confirmTrack: (title: string, iconRef?: string) => void
   cancel: () => void
@@ -55,6 +57,9 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
   const [state, setState] = useState<FlowState>('idle')
   const [youtubeUrl, setYoutubeUrl] = useState<string | null>(null)
   const [cardId, setCardId] = useState<string | null>(null)
+  // AIDEV-NOTE: Display name for the success screen. Without it that screen showed the
+  // raw cardId, which reads as gibberish ("added to bzsiy").
+  const [cardTitle, setCardTitle] = useState<string | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
   const [progress, setProgress] = useState<JobProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -114,13 +119,14 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
   }, [])
 
   const selectCard = useCallback(
-    async (selectedCardId: string) => {
+    async (selectedCardId: string, selectedCardTitle?: string) => {
       if (!isAuthenticated) {
         loginWithRedirect()
         return
       }
 
       setCardId(selectedCardId)
+      setCardTitle(selectedCardTitle ?? null)
       setState('uploading')
 
       try {
@@ -193,6 +199,7 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
     setState('idle')
     setYoutubeUrl(null)
     setCardId(null)
+    setCardTitle(null)
     setJobId(null)
     setProgress(null)
     setError(null)
@@ -203,6 +210,7 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
     state,
     youtubeUrl,
     cardId,
+    cardTitle,
     progress,
     error,
     confirmData,

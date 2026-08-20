@@ -5,6 +5,21 @@ import '../styles/upload-progress.css'
 const STEPS = ['download', 'convert', 'upload'] as const
 type StepName = (typeof STEPS)[number]
 
+// AIDEV-NOTE: YouTube URLs arrive carrying tracking junk (`&pp=ygUb...`), which wrapped
+// across two lines and told the user nothing. Show just the canonical video reference.
+function tidyYoutubeUrl(raw: string): string {
+  try {
+    const u = new URL(raw)
+    if (u.hostname === 'youtu.be') return `youtu.be${u.pathname}`
+    const id = u.searchParams.get('v')
+    if (u.hostname.endsWith('youtube.com') && id) return `youtube.com/watch?v=${id}`
+    return u.hostname + u.pathname
+  } catch {
+    // Not a parseable URL — it may already be a plain title.
+    return raw
+  }
+}
+
 // AIDEV-NOTE: transcode maps to the upload step in the 3-step UI
 function mapStep(step: string): StepName | null {
   if (step === 'download') return 'download'
@@ -21,7 +36,10 @@ interface UploadProgressProps {
 
 export function UploadProgress({ progress, title, onCancel }: UploadProgressProps) {
   const activeStep = progress ? mapStep(progress.step) : null
-  const activeIdx = activeStep ? STEPS.indexOf(activeStep) : -1
+  // AIDEV-NOTE: Default to the first step. yt-dlp takes a few seconds to emit its first
+  // progress line, and until then every label rendered grey — the screen looked stalled
+  // at the exact moment work had just begun.
+  const activeIdx = activeStep ? STEPS.indexOf(activeStep) : 0
   const percentage =
     progress && 'progress' in progress ? (progress as { progress: number }).progress : null
 
@@ -35,7 +53,7 @@ export function UploadProgress({ progress, title, onCancel }: UploadProgressProp
   return (
     <div className="upload-progress">
       <CassetteLoader progress={overallProgress} />
-      <p className="upload-progress-title">{title}</p>
+      <p className="upload-progress-title">{tidyYoutubeUrl(title)}</p>
       <div className="upload-progress-steps" role="group" aria-label="Upload progress">
         {STEPS.map((step, idx) => {
           const isCurrent = idx === activeIdx
