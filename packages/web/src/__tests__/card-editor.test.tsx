@@ -11,8 +11,8 @@ vi.mock('../auth/yoto-provider', () => ({
   useYoto: () => mockUseYoto(),
 }))
 
-vi.mock('@auth0/auth0-react', () => ({
-  useAuth0: () => ({
+vi.mock('../auth/use-auth', () => ({
+  useAuth: () => ({
     isAuthenticated: true,
     isLoading: false,
     loginWithRedirect: vi.fn(),

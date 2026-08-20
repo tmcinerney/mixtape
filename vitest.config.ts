@@ -25,6 +25,9 @@ export default defineConfig({
           environment: 'jsdom',
           globals: true,
           setupFiles: ['./src/test-setup.ts'],
+          // AIDEV-NOTE: auth-client refuses to start a login while the client id is
+          // still the placeholder. Give the suite a real-looking one.
+          env: { VITE_YOTO_CLIENT_ID: 'test-client-id' },
         },
       },
     ],

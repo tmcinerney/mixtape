@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth } from '../auth/use-auth'
 import type { DisplayIcon } from '@yotoplay/yoto-sdk'
 import { useIcons } from '../hooks/use-icons'
 import { suggestIcon } from '../api/client'
@@ -16,7 +16,7 @@ interface IconPickerProps {
 // via local embeddings on the server to find the best icon for the track.
 export function IconPicker({ onSelect, trackTitle }: IconPickerProps) {
   const { icons, loading } = useIcons()
-  const { getAccessTokenSilently } = useAuth0()
+  const { getAccessTokenSilently } = useAuth()
   const [search, setSearch] = useState('')
   const [suggesting, setSuggesting] = useState(false)
 

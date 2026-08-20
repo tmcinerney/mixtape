@@ -4,8 +4,8 @@ import { renderHook, act } from '@testing-library/react'
 const mockLoginWithRedirect = vi.fn()
 const mockGetAccessTokenSilently = vi.fn()
 
-vi.mock('@auth0/auth0-react', () => ({
-  useAuth0: () => ({
+vi.mock('../auth/use-auth', () => ({
+  useAuth: () => ({
     isAuthenticated: mockIsAuthenticated,
     loginWithRedirect: mockLoginWithRedirect,
     getAccessTokenSilently: mockGetAccessTokenSilently,

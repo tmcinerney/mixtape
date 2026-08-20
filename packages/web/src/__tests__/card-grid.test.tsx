@@ -10,9 +10,9 @@ vi.mock('../auth/yoto-provider', () => ({
   useYoto: () => mockUseYoto(),
 }))
 
-const mockUseAuth0 = vi.fn()
-vi.mock('@auth0/auth0-react', () => ({
-  useAuth0: () => mockUseAuth0(),
+const mockUseAuth = vi.fn()
+vi.mock('../auth/use-auth', () => ({
+  useAuth: () => mockUseAuth(),
 }))
 
 import { CardGrid } from '../components/card-grid'
@@ -35,7 +35,7 @@ describe('CardGrid', () => {
   beforeEach(() => {
     mockGetMyCards.mockReset()
     mockLoginWithRedirect.mockReset()
-    mockUseAuth0.mockReturnValue({
+    mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       loginWithRedirect: mockLoginWithRedirect,
     })
@@ -46,7 +46,7 @@ describe('CardGrid', () => {
   })
 
   it('renders nothing when not authenticated', () => {
-    mockUseAuth0.mockReturnValue({
+    mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       loginWithRedirect: mockLoginWithRedirect,
     })
