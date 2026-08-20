@@ -37,6 +37,26 @@ beforeEach(() => {
 })
 
 describe('downloadAudio', () => {
+  // AIDEV-NOTE: Regression test. yt-dlp's rotating default player client (visionos on
+  // 2026-08-20) returned "This video is not available" for a public video that the
+  // android client fetched without complaint. Listing clients makes yt-dlp merge
+  // formats from all of them. Dropping this arg silently breaks a subset of videos.
+  it('passes a youtube player-client fallback list', async () => {
+    const proc = createMockProcess()
+    vi.mocked(spawn).mockReturnValue(proc as unknown as ChildProcess)
+
+    const promise = downloadAudio('https://www.youtube.com/watch?v=abc123', vi.fn())
+    proc.stdout.emit('data', Buffer.from('{"title":"T","duration":1}\n/tmp/x.m4a\n'))
+    proc.emit('close', 0)
+    await promise
+
+    const args = vi.mocked(spawn).mock.calls[0]?.[1] as string[]
+    const idx = args.indexOf('--extractor-args')
+    expect(idx).toBeGreaterThanOrEqual(0)
+    expect(args[idx + 1]).toMatch(/^youtube:player_client=/)
+    expect(args[idx + 1]).toContain('android')
+  })
+
   it('calls yt-dlp with correct arguments', async () => {
     const proc = createMockProcess()
     vi.mocked(spawn).mockReturnValue(proc as unknown as ChildProcess)
