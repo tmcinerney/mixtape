@@ -47,6 +47,16 @@ export async function downloadAudio(
   const tempTemplate = `${tempBase}.%(ext)s`
 
   const args = [
+    // AIDEV-NOTE: Pin a player-client fallback list. yt-dlp impersonates a YouTube
+    // client app to fetch a video, and its rotating default is sometimes refused.
+    // On 2026-08-20 the `visionos` default returned "This video is not available" for
+    // a perfectly public video, while `android` fetched it fine. `web` alone is no
+    // use now either: YouTube requires PO tokens for web formats, so yt-dlp sees
+    // metadata but no downloadable audio. Listing clients makes yt-dlp merge formats
+    // from all of them, so one working client rescues the rest. `default` stays first
+    // so upstream fixes are inherited as YouTube changes.
+    '--extractor-args',
+    'youtube:player_client=default,android',
     '--extract-audio',
     '--audio-format',
     'm4a',
