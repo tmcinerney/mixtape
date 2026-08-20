@@ -117,6 +117,58 @@ describe('useAddTrack', () => {
     expect(chapters[0]).not.toHaveProperty('display')
   })
 
+  // AIDEV-NOTE: Regression test. Only the chapter carried a title, so the Yoto player
+  // showed a nameless song. Yoto marks track.title required but accepts the payload
+  // without it, so this failed silently instead of erroring.
+  it('sets the title on the track, not only the chapter', async () => {
+    mockGetCard.mockResolvedValue({ content: { chapters: [] }, metadata: {} })
+    mockUpdateCard.mockResolvedValue(undefined)
+
+    const { result } = renderHook(() => useAddTrack())
+    await act(async () => {
+      await result.current.addTrack({
+        cardId: 'card-1',
+        mediaUrl: 'https://media.yoto.io/some-file.opus',
+        title: 'Milo the Sleepy Mouse',
+      })
+    })
+
+    const payload = mockUpdateCard.mock.calls[0]![0] as { content: Record<string, unknown> }
+    const chapters = payload.content.chapters as {
+      title?: string
+      tracks: { title?: string }[]
+    }[]
+
+    expect(chapters[0]!.title).toBe('Milo the Sleepy Mouse')
+    expect(chapters[0]!.tracks[0]!.title).toBe('Milo the Sleepy Mouse')
+  })
+
+  // AIDEV-NOTE: Yoto's own example sets display on both the chapter and the track.
+  it('puts the icon ref on the track as well as the chapter', async () => {
+    mockGetCard.mockResolvedValue({ content: { chapters: [] }, metadata: {} })
+    mockUpdateCard.mockResolvedValue(undefined)
+
+    const ref = 'yoto:#zH4Xk1YQ0mN7bC2vR8sT5wL3pJ6dF9gA0eB1uI4oK7x'
+    const { result } = renderHook(() => useAddTrack())
+    await act(async () => {
+      await result.current.addTrack({
+        cardId: 'card-1',
+        mediaUrl: 'https://media.yoto.io/some-file.opus',
+        title: 'My Track',
+        iconRef: ref,
+      })
+    })
+
+    const payload = mockUpdateCard.mock.calls[0]![0] as { content: Record<string, unknown> }
+    const chapters = payload.content.chapters as {
+      display?: { icon16x16?: string }
+      tracks: { display?: { icon16x16?: string } }[]
+    }[]
+
+    expect(chapters[0]!.display?.icon16x16).toBe(ref)
+    expect(chapters[0]!.tracks[0]!.display?.icon16x16).toBe(ref)
+  })
+
   it('appends a track after existing chapters', async () => {
     mockGetCard.mockResolvedValue({
       content: {

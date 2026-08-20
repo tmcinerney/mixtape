@@ -17,6 +17,9 @@ export function LandingPage() {
   const { addTrack } = useAddTrack()
   const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)
+  // AIDEV-NOTE: Bumped after a playlist is created or a track is added, so the card
+  // grid refetches instead of waiting for a page reload.
+  const [reloadKey, setReloadKey] = useState(0)
   // AIDEV-NOTE: Track the confirmed title so we can show it in the success screen.
   const confirmedTitleRef = useRef('Track')
 
@@ -29,6 +32,8 @@ export function LandingPage() {
         title: params.title,
         ...(params.iconRef !== undefined ? { iconRef: params.iconRef } : {}),
       })
+      // A new track can change the card's artwork and track count in the grid.
+      setReloadKey((n) => n + 1)
     },
     [addTrack],
   )
@@ -90,11 +95,14 @@ export function LandingPage() {
       </div>
 
       <div className="landing-cards-section">
-        <CardGrid onAddPlaylist={() => setShowCreate(true)} />
+        <CardGrid onAddPlaylist={() => setShowCreate(true)} reloadKey={reloadKey} />
         <CreateCardDialog
           open={showCreate}
           onClose={() => setShowCreate(false)}
-          onCreated={() => setShowCreate(false)}
+          onCreated={() => {
+            setShowCreate(false)
+            setReloadKey((n) => n + 1)
+          }}
         />
       </div>
     </div>
