@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
 import { IconPicker } from './icon-picker'
 import type { DisplayIcon, YotoJson } from '@yotoplay/yoto-sdk'
+import { MYO_CARD_DEFAULTS, MYO_CONFIG_DEFAULTS } from '../lib/yoto-card'
 import '../styles/dialog.css'
 
 interface CreateCardDialogProps {
@@ -28,27 +29,37 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
 
     setCreating(true)
 
+    // AIDEV-NOTE: Shared defaults, deliberately. This used to carry its own copy with
+    // `chapters: {}` and `version: 2`, which Yoto rejects, and with activity/config
+    // values that disagreed with use-add-track — see lib/yoto-card.ts.
     const newCard: YotoJson = {
       content: {
-        activity: 'none',
+        ...MYO_CARD_DEFAULTS,
         editTracksDisabled: false,
-        chapters: {},
-        config: { onlineOnly: true },
-        version: 2,
-        restricted: false,
+        chapters: [],
+        config: { ...MYO_CONFIG_DEFAULTS },
       },
       metadata: {
         title: title.trim(),
+        // AIDEV-NOTE: This is a 16x16 track icon, which is the wrong asset for a
+        // playlist. Yoto's cover image is metadata.cover.imageL, uploaded via
+        // /media/coverImage/user/me/upload. Left as-is for now because it still gives
+        // the card grid a thumbnail; replacing it is a product decision, not a bug fix.
         ...(icon ? { icon: icon.url } : {}),
         color: '#6366F1',
       },
     }
 
-    await sdk.content.updateCard(newCard)
+    try {
+      await sdk.content.updateCard(newCard)
+    } finally {
+      // AIDEV-NOTE: Previously a failed create left `creating` stuck true, so the
+      // button stayed disabled at "Creating..." with no way back.
+      setCreating(false)
+    }
 
     setTitle('')
     setIcon(null)
-    setCreating(false)
     onCreated()
   }
 
