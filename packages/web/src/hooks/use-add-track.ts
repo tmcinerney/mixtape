@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
 import type { Chapter } from '../types/yoto'
+import { MYO_CARD_DEFAULTS, MYO_CONFIG_DEFAULTS } from '../lib/yoto-card'
 
 interface AddTrackParams {
   cardId: string
@@ -12,16 +13,6 @@ interface AddTrackParams {
 
 // AIDEV-NOTE: Card defaults from yoto-mcp/src/tools/content.ts — matching
 // the official MYO portal. These are merged onto existing card content.
-const MYO_CARD_DEFAULTS = {
-  activity: 'yoto_Player',
-  restricted: true,
-  version: '1',
-}
-
-const MYO_CONFIG_DEFAULTS = {
-  resumeTimeout: 2592000,
-  onlineOnly: false,
-}
 
 export function useAddTrack() {
   const { sdk } = useYoto()

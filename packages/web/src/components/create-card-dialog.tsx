@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useYoto } from '../auth/yoto-provider'
-import { IconPicker } from './icon-picker'
-import type { DisplayIcon, YotoJson } from '@yotoplay/yoto-sdk'
+import { useAuth } from '../auth/use-auth'
+import { uploadCoverImage } from '../api/yoto-cover'
+import { MYO_CARD_DEFAULTS, MYO_CONFIG_DEFAULTS } from '../lib/yoto-card'
 import '../styles/dialog.css'
 
 interface CreateCardDialogProps {
@@ -10,46 +11,95 @@ interface CreateCardDialogProps {
   onCreated: () => void
 }
 
-// AIDEV-NOTE: Creates a new card via SDK updateCard with sensible defaults for
-// device playback. The card starts with no chapters — user adds tracks later via
-// the card editor. The SDK doesn't have a dedicated createCard method, so we use
-// updateCard which performs an upsert when no cardId is present.
+const MAX_COVER_BYTES = 5 * 1024 * 1024
+
+// AIDEV-NOTE: Creates a playlist via SDK updateCard, which upserts when no cardId is
+// present. Payload shape follows yoto.dev/reference/card-content-schema:
+//   title                 top-level, REQUIRED (1-140 chars). NOT metadata.title —
+//                         `title` does not exist in the metadata schema at all.
+//   content.chapters      REQUIRED array
+//   metadata.cover.imageL the card artwork, a plain URL from the cover upload endpoint
+//
+// This dialog used to offer the 16x16 track-icon picker and write `metadata.icon`.
+// Both were wrong: icons represent tracks on the player, not the album, and
+// `metadata.icon` is not a schema field. It now uploads a real cover image.
 export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogProps) {
   const { sdk } = useYoto()
+  const { getAccessTokenSilently } = useAuth()
   const [title, setTitle] = useState('')
-  const [icon, setIcon] = useState<DisplayIcon | null>(null)
-  const [showIconPicker, setShowIconPicker] = useState(false)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (!open) return null
+
+  const chooseCover = (file: File | undefined) => {
+    setError(null)
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Pick an image file.')
+      return
+    }
+    if (file.size > MAX_COVER_BYTES) {
+      setError('That image is over 5 MB. Pick a smaller one.')
+      return
+    }
+    setCoverFile(file)
+    // AIDEV-NOTE: Object URL is revoked when the choice is replaced or cleared, so a
+    // long-lived dialog cannot leak them.
+    setCoverPreview((previous) => {
+      if (previous) URL.revokeObjectURL(previous)
+      return URL.createObjectURL(file)
+    })
+  }
+
+  const clearCover = () => {
+    if (coverPreview) URL.revokeObjectURL(coverPreview)
+    setCoverPreview(null)
+    setCoverFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const reset = () => {
+    setTitle('')
+    clearCover()
+    setError(null)
+  }
 
   const handleCreate = async () => {
     if (!sdk || !title.trim()) return
 
     setCreating(true)
+    setError(null)
 
-    const newCard: YotoJson = {
-      content: {
-        activity: 'none',
-        editTracksDisabled: false,
-        chapters: {},
-        config: { onlineOnly: true },
-        version: 2,
-        restricted: false,
-      },
-      metadata: {
+    try {
+      let coverUrl: string | null = null
+      if (coverFile) {
+        const token = await getAccessTokenSilently()
+        coverUrl = (await uploadCoverImage(coverFile, token)).mediaUrl
+      }
+
+      await sdk.content.updateCard({
         title: title.trim(),
-        ...(icon ? { icon: icon.url } : {}),
-        color: '#6366F1',
-      },
+        content: {
+          ...MYO_CARD_DEFAULTS,
+          chapters: [],
+          config: { ...MYO_CONFIG_DEFAULTS },
+        },
+        ...(coverUrl ? { metadata: { cover: { imageL: coverUrl } } } : {}),
+      } as unknown as Parameters<typeof sdk.content.updateCard>[0])
+
+      reset()
+      onCreated()
+    } catch (err) {
+      // AIDEV-NOTE: Surface the failure. This used to leave `creating` stuck true, so
+      // the button sat disabled at "Creating..." with no explanation and no way back.
+      setError(err instanceof Error ? err.message : 'Could not create the playlist')
+    } finally {
+      setCreating(false)
     }
-
-    await sdk.content.updateCard(newCard)
-
-    setTitle('')
-    setIcon(null)
-    setCreating(false)
-    onCreated()
   }
 
   return (
@@ -64,36 +114,41 @@ export function CreateCardDialog({ open, onClose, onCreated }: CreateCardDialogP
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="My playlist"
+            maxLength={140}
             className="dialog-input"
           />
         </label>
 
-        <div className="dialog-icon-section">
-          <button
-            className="dialog-icon-trigger"
-            onClick={() => setShowIconPicker(!showIconPicker)}
-          >
-            {icon ? (
-              <>
-                <img src={icon.url} alt={icon.title} className="dialog-icon-preview" />
-                <span className="dialog-icon-name">{icon.title}</span>
-              </>
-            ) : (
-              <span className="dialog-icon-placeholder">Choose icon</span>
-            )}
-          </button>
-          {showIconPicker ? (
-            <div>
-              <IconPicker
-                onSelect={(selected) => {
-                  setIcon(selected)
-                  setShowIconPicker(false)
-                }}
-                {...(title.trim() ? { trackTitle: title.trim() } : {})}
-              />
+        <div className="dialog-cover-section">
+          <span className="dialog-label">Cover image (optional)</span>
+          <p className="dialog-hint">
+            Artwork for the playlist in the Yoto app. Track icons are chosen separately, per track.
+          </p>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="dialog-file-input"
+            aria-label="Choose a cover image"
+            onChange={(e) => chooseCover(e.target.files?.[0])}
+          />
+
+          {coverPreview ? (
+            <div className="dialog-cover-preview-row">
+              <img src={coverPreview} alt="Cover preview" className="dialog-cover-preview" />
+              <button type="button" className="dialog-cover-clear" onClick={clearCover}>
+                Remove
+              </button>
             </div>
           ) : null}
         </div>
+
+        {error ? (
+          <p className="dialog-error" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         <div className="dialog-actions">
           <button className="btn-ghost" onClick={onClose} disabled={creating}>
