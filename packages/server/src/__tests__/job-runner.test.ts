@@ -103,6 +103,48 @@ describe('runJob', () => {
     )
   })
 
+  // AIDEV-NOTE: Regression test. runJob used to fire the terminal error event without
+  // awaiting it, so the SSE write raced the throw. The route's catch returned and
+  // streamSSE closed the connection before the error flushed, leaving the browser on
+  // "Processing…" with no message. Only fast failures lost the race, which is exactly
+  // how it survived: a slow failure delivered its error and looked correct.
+  it('waits for the error event to flush before rejecting', async () => {
+    const err = new Error('yt-dlp failed')
+    ;(err as { code?: string }).code = 'VIDEO_NOT_FOUND'
+    vi.mocked(downloadAudio).mockRejectedValue(err)
+
+    let flushed = false
+    const onEvent = vi.fn(async () => {
+      // Stand in for an SSE write that does not resolve in the same microtask.
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      flushed = true
+    })
+
+    await expect(runJob(baseConfig, onEvent)).rejects.toThrow('yt-dlp failed')
+
+    expect(flushed).toBe(true)
+  })
+
+  it('waits for the complete event to flush before resolving', async () => {
+    vi.mocked(downloadAudio).mockResolvedValue({
+      filePath: '/tmp/test.m4a',
+      title: 'Test',
+      duration: 120,
+      fileSize: 1000,
+    })
+
+    let flushed = false
+    const onEvent = vi.fn(async (event: { step: string }) => {
+      if (event.step !== 'complete') return
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      flushed = true
+    })
+
+    await runJob(baseConfig, onEvent)
+
+    expect(flushed).toBe(true)
+  })
+
   it('emits error event when upload fails', async () => {
     vi.mocked(downloadAudio).mockResolvedValue({
       filePath: '/tmp/test.m4a',

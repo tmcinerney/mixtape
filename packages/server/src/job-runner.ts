@@ -20,7 +20,9 @@ export interface JobConfig {
  */
 export async function runJob(
   config: JobConfig,
-  onEvent: (event: JobProgress) => void,
+  // AIDEV-NOTE: May return a promise. The terminal `complete` and `error` events MUST
+  // be awaited — see below.
+  onEvent: (event: JobProgress) => void | Promise<void>,
   signal?: AbortSignal,
 ): Promise<string> {
   let tempFilePath: string | undefined
@@ -54,12 +56,17 @@ export async function runJob(
 
     // Step 3: Emit complete event with both title variants
     const title = sanitizeTitle(downloadResult.title)
-    onEvent({ step: 'complete', mediaUrl, title, suggestedTitle: suggested })
+    await onEvent({ step: 'complete', mediaUrl, title, suggestedTitle: suggested })
 
     return mediaUrl
   } catch (err) {
     const error = err as Error & { code?: string }
-    onEvent({
+    // AIDEV-NOTE: This await is load-bearing. Without it the SSE write races the
+    // `throw` below: the route's catch runs, the handler returns, and streamSSE closes
+    // the connection before the error is flushed. The client then sits on "Processing…"
+    // forever with no message. It only reproduced on FAST failures — a slow one won the
+    // race and looked fine, which is what made it easy to miss.
+    await onEvent({
       step: 'error',
       message: error.message,
       code: error.code ?? 'UNKNOWN_ERROR',

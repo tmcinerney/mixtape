@@ -49,7 +49,10 @@ app.post('/api/jobs', zValidator('json', JobRequestSchema), (c) => {
         entry.abortController.signal,
       )
       queue.markComplete(jobId)
-    } catch {
+    } catch (err) {
+      // AIDEV-NOTE: The only error log in the server. Without it a failed job is
+      // completely invisible: no request log, no stack, nothing in `docker logs`.
+      console.error(`[job ${jobId}] failed:`, err instanceof Error ? err.message : err)
       queue.markFailed(jobId)
     }
   })
