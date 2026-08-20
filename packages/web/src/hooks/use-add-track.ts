@@ -6,7 +6,8 @@ interface AddTrackParams {
   cardId: string
   mediaUrl: string
   title: string
-  iconUrl?: string
+  /** `yoto:#{mediaId}` ref, NOT a URL. The Yoto API 400s on a URL here. */
+  iconRef?: string
 }
 
 // AIDEV-NOTE: Card defaults from yoto-mcp/src/tools/content.ts — matching
@@ -28,7 +29,7 @@ export function useAddTrack() {
   const [error, setError] = useState<string | null>(null)
 
   const addTrack = useCallback(
-    async ({ cardId, mediaUrl, title, iconUrl }: AddTrackParams) => {
+    async ({ cardId, mediaUrl, title, iconRef }: AddTrackParams) => {
       if (!sdk) throw new Error('Yoto SDK not ready')
 
       setIsAdding(true)
@@ -51,8 +52,10 @@ export function useAddTrack() {
           key: paddedKey,
           title,
           overlayLabel: String(nextIndex + 1),
-          // AIDEV-NOTE: Set chapter display icon if provided
-          ...(iconUrl ? { display: { icon16x16: iconUrl } } : {}),
+          // AIDEV-NOTE: icon16x16 must be a `yoto:#{mediaId}` ref with a 43-char
+          // mediaId. Passing icon.url here 400s. Omit the key entirely when unset —
+          // an empty string is also rejected.
+          ...(iconRef ? { display: { icon16x16: iconRef } } : {}),
           // AIDEV-NOTE: Yoto API requires `trackUrl` (not `url`) and `key` on each track.
           // Confirmed via network inspection of real card payloads.
           tracks: [

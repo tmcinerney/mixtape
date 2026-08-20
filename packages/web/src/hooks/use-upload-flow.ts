@@ -16,7 +16,8 @@ interface TrackReadyParams {
   mediaUrl: string
   cardId: string
   title: string
-  iconUrl?: string
+  /** `yoto:#{mediaId}` ref, not a URL — the Yoto API rejects URLs with a 400. */
+  iconRef?: string
 }
 
 interface UploadFlowOptions {
@@ -42,8 +43,8 @@ interface UploadFlowResult {
   confirmData: ConfirmData | null
   submitUrl: (url: string) => void
   selectCard: (cardId: string) => void
-  /** User confirms the track title and optional icon */
-  confirmTrack: (title: string, iconUrl?: string) => void
+  /** User confirms the track title and optional icon ref */
+  confirmTrack: (title: string, iconRef?: string) => void
   cancel: () => void
   reset: () => void
 }
@@ -143,7 +144,7 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
   // AIDEV-NOTE: Called from the confirm screen with the user's final title choice
   // and optional icon. Triggers onTrackReady which adds the track to the card.
   const confirmTrack = useCallback(
-    (title: string, iconUrl?: string) => {
+    (title: string, iconRef?: string) => {
       if (!confirmData || !cardId) return
 
       setState('adding-track')
@@ -151,7 +152,7 @@ export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowRe
         mediaUrl: confirmData.mediaUrl,
         cardId,
         title,
-        ...(iconUrl !== undefined ? { iconUrl } : {}),
+        ...(iconRef !== undefined ? { iconRef } : {}),
       })
         .then(() => setState('complete'))
         .catch((err) => {
