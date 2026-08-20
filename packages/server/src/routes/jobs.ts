@@ -5,6 +5,7 @@ import { JobRequestSchema } from '@mixtape/shared'
 import type { JobProgress } from '@mixtape/shared'
 import { JobQueue } from '../job-queue'
 import { runJob } from '../job-runner'
+import { warmIconCorpus } from './icons'
 
 // AIDEV-NOTE: Single shared queue instance for the server process.
 // Max 3 concurrent jobs, cleanup after 5 minutes.
@@ -20,6 +21,14 @@ app.post('/api/jobs', zValidator('json', JobRequestSchema), (c) => {
 
   return streamSSE(c, async (stream) => {
     const jobId = queue.enqueue(body)
+
+    // AIDEV-NOTE: Fire and forget. Embedding the icon corpus takes tens of seconds, and
+    // the user does not reach the icon picker until this job finishes minutes from now.
+    // Starting it here means auto-match is warm when they get there. Failures are
+    // deliberately swallowed: this is an optimisation, never a reason to fail a job.
+    void warmIconCorpus(body.yotoToken).catch((err: unknown) => {
+      console.error('[icons] warm-up failed:', err instanceof Error ? err.message : err)
+    })
 
     // Send initial event with job ID
     await stream.writeSSE({ data: JSON.stringify({ jobId }), event: 'init' })
