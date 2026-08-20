@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth } from '../auth/use-auth'
 // AIDEV-NOTE: loginWithRedirect removed — sign-in now handled by header button
 // and upload flow hook (use-upload-flow.ts line 66-72)
 import { useYotoQuery } from '../hooks/use-yoto-query'
@@ -35,7 +35,7 @@ function getCardImage(card: CardWithMetadata): string | undefined {
 }
 
 export function CardGrid({ onAddPlaylist }: CardGridProps) {
-  const { isAuthenticated } = useAuth0()
+  const { isAuthenticated } = useAuth()
   const {
     data: cards,
     loading,

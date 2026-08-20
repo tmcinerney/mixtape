@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth } from '../auth/use-auth'
 import type { JobProgress } from '@mixtape/shared'
 import { startJob, cancelJob } from '../api/client'
 
@@ -49,7 +49,7 @@ interface UploadFlowResult {
 }
 
 export function useUploadFlow({ onTrackReady }: UploadFlowOptions): UploadFlowResult {
-  const { isAuthenticated, getAccessTokenSilently, loginWithRedirect } = useAuth0()
+  const { isAuthenticated, getAccessTokenSilently, loginWithRedirect } = useAuth()
 
   const [state, setState] = useState<FlowState>('idle')
   const [youtubeUrl, setYoutubeUrl] = useState<string | null>(null)

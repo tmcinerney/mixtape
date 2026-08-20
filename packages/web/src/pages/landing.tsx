@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth } from '../auth/use-auth'
 import { useUploadFlow } from '../hooks/use-upload-flow'
 import { useAddTrack } from '../hooks/use-add-track'
 import { UrlInput } from '../components/url-input'
@@ -13,7 +13,7 @@ import { CreateCardDialog } from '../components/create-card-dialog'
 import '../styles/landing.css'
 
 export function LandingPage() {
-  const { isAuthenticated } = useAuth0()
+  const { isAuthenticated } = useAuth()
   const { addTrack } = useAddTrack()
   const navigate = useNavigate()
   const [showCreate, setShowCreate] = useState(false)

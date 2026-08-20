@@ -11,7 +11,7 @@ function useAppVersion() {
   return version
 }
 import { useRoutes, Link } from 'react-router-dom'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth } from './auth/use-auth'
 import { YotoProvider } from './auth/yoto-provider'
 import { useTheme } from './hooks/use-theme'
 import { routes } from './routes'
@@ -19,7 +19,7 @@ import './styles/header.css'
 import './styles/footer.css'
 
 function AvatarMenu() {
-  const { user, logout } = useAuth0()
+  const { isAuthenticated, logout } = useAuth()
   const version = useAppVersion()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -46,24 +46,32 @@ function AvatarMenu() {
     return () => document.removeEventListener('keydown', handler)
   }, [open, close])
 
-  if (!user) return null
+  // AIDEV-NOTE: Gate on isAuthenticated, never on a user object. Yoto grants no
+  // `profile` scope, so there is no ID token and no profile to gate on — an
+  // absent-user check here would hide the Log out button permanently.
+  if (!isAuthenticated) return null
 
   return (
     <div className="header-avatar-menu" ref={menuRef}>
-      <button className="header-avatar-trigger" onClick={() => setOpen(!open)} aria-expanded={open}>
-        {/* AIDEV-NOTE: Skip Gravatar defaults (green letter circle) — use our own styled initial */}
-        {user.picture && !user.picture.includes('gravatar.com') ? (
-          <img src={user.picture} alt={user.name ?? 'User avatar'} className="header-avatar" />
-        ) : (
-          <span className="header-avatar-fallback">{user.name?.[0] ?? '?'}</span>
-        )}
+      <button
+        className="header-avatar-trigger"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-label="Account menu"
+      >
+        {/* AIDEV-NOTE: Generic glyph, not an initial. Yoto's scope list has no `profile`,
+            so name, email and picture are all unavailable. An initial derived from the
+            token `sub` would read as real data while being the same letter for everyone
+            (Auth0 subs all start `auth0|` or `google-oauth2|`). */}
+        <span className="header-avatar-fallback" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" strokeLinecap="round" />
+          </svg>
+        </span>
       </button>
       {open ? (
         <div className="header-dropdown" role="menu">
-          <div className="header-dropdown-user">
-            <span className="header-dropdown-name">{user.name}</span>
-            {user.email ? <span className="header-dropdown-email">{user.email}</span> : null}
-          </div>
           {version ? <span className="header-dropdown-version">v{version}</span> : null}
           <hr className="header-dropdown-divider" />
           <button
@@ -71,11 +79,10 @@ function AvatarMenu() {
             role="menuitem"
             onClick={() => {
               close()
-              // AIDEV-NOTE: Use openUrl: false to avoid hitting Auth0's /v2/logout
-              // endpoint — Yoto's tenant doesn't have our URLs in Allowed Logout URLs.
-              // This clears the local session only; the Auth0 SSO session persists
-              // so re-login is instant (no password prompt).
-              logout({ openUrl: false })
+              // AIDEV-NOTE: Local session clear only. The Yoto SSO session persists, so
+              // signing back in is instant with no password prompt. Deliberate: a full
+              // /v2/logout would also end the user's my.yotoplay.com session.
+              logout()
               window.location.href = '/'
             }}
           >
@@ -89,7 +96,7 @@ function AvatarMenu() {
 
 function Header() {
   const { preference, cycleTheme } = useTheme()
-  const { isAuthenticated, loginWithRedirect } = useAuth0()
+  const { isAuthenticated, loginWithRedirect } = useAuth()
 
   return (
     <header className="header">
@@ -196,7 +203,7 @@ function Header() {
 // start a job or manage cards. YotoProvider only renders when authenticated
 // so SDK calls don't fire without a token.
 export function App() {
-  const { isAuthenticated } = useAuth0()
+  const { isAuthenticated } = useAuth()
   const routeElement = useRoutes(routes)
 
   return (

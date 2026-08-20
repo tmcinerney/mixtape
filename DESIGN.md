@@ -36,10 +36,22 @@ Adding YouTube audio to Yoto MYO cards currently requires either the MCP server 
 
 ### 2. Authentication
 
-Two layers:
+**Yoto OAuth** (Authorization Code + PKCE) gates card management. Each family member logs in with their own Yoto account. Tokens are held client-side in the browser.
 
-- **Cloudflare Access** (Google auth) — gates who can reach the site
-- **Yoto OAuth** (Authorization Code + PKCE) — gates card management. Each family member logs in with their own Yoto account. Client-side, tokens in browser.
+The flow is hand-rolled in `packages/web/src/auth/auth-client.ts`. It is deliberately not `@auth0/auth0-react`: that library's `auth0-spa-js` core appends `openid` to every authorize request with no opt-out, and Yoto does not pre-approve `openid`. Yoto's own examples hand-roll the flow for the same reason.
+
+Requested scopes, which must all be ticked on the dashboard.yoto.dev app:
+
+| Scope                 | Needed for                                                |
+| --------------------- | --------------------------------------------------------- |
+| `user:content:view`   | `content.getMyCards`, `content.getCard`                   |
+| `user:content:manage` | `content.updateCard`, server-side media upload            |
+| `user:icons:manage`   | `icons.getDisplayIcons`                                   |
+| `offline_access`      | Refresh tokens. Granted implicitly, not on the tick list. |
+
+Yoto grants no `profile` scope, so there is no ID token and no user profile. The app shows no name, email, or avatar image.
+
+Yoto also refuses `offline_access`, and Auth0 issues a refresh token only when that scope is granted. **The app therefore cannot refresh tokens.** A session ends when its access token expires, and `auth-client.ts` clears it on a timer so the header returns to "Sign in". Signing back in costs one redirect and no password, because the Yoto SSO session outlives our access token.
 
 ### 3. Lightweight Card Management
 
@@ -100,9 +112,11 @@ mixtape/
 - Single Docker image published to **GHCR** (GitHub Actions on push/tag)
 - Backend serves SPA static files in production
 - yt-dlp + ffmpeg baked into image
-- Docker container on homelab
-- Cloudflare Tunnel for family access
-- Cloudflare Access with Google auth
+- Runs on **apollo** (`192.168.10.61`), NixOS, as `docker-homelab-mixtape.service`
+- Declared in `homelab-nixos/containers/mixtape.nix` via `virtualisation.oci-containers`
+- `--pull=always`, so `systemctl restart docker-homelab-mixtape` deploys a new `:latest`
+- **Traefik** on the same host terminates TLS for `mixtape.trav.cloud` (LetsEncrypt)
+- `OPENAI_API_KEY` supplied by agenix from `secrets/hosts/apollo/mixtape.env.age`
 
 ### Audio Constraints
 
@@ -138,10 +152,10 @@ mixtape/
 - [x] Backend framework → **Hono + Zod**
 - [x] Progress reporting → **SSE**
 - [x] Error handling → **Specific yt-dlp error mapping**
-- [x] PKCE token refresh → **Proactive silent refresh via refresh token**
+- [x] PKCE token refresh → **Not possible.** Yoto refuses `offline_access`, so no refresh token is ever issued. `auth-client.ts` clears the session on a timer at expiry and the user signs in again via SSO.
 - [x] Upload flow → **Backend handles full pipeline** (frontend passes token per-job)
 - [x] Backend rate limiting → **In-memory queue, max 3 concurrent jobs**
-- [ ] Which homelab host (apollo vs hermes)
+- [x] Which homelab host → **apollo**
 
 ## Non-Goals (v1)
 

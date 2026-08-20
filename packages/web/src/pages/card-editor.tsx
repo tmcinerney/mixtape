@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useAuth } from '../auth/use-auth'
 import { useCardEditor } from '../hooks/use-card-editor'
 import { useIconResolver } from '../hooks/use-icon-resolver'
 import { TrackList } from '../components/track-list'
@@ -11,7 +11,7 @@ import '../styles/card-editor.css'
 
 export function CardEditor() {
   const { cardId } = useParams<{ cardId: string }>()
-  const { isAuthenticated, isLoading: authLoading, loginWithRedirect } = useAuth0()
+  const { isAuthenticated, isLoading: authLoading, loginWithRedirect } = useAuth()
 
   const {
     card,
