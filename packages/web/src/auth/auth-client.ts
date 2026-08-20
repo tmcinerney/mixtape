@@ -28,7 +28,7 @@ export const YOTO_SCOPES = 'user:content:view user:content:manage user:icons:man
 const CLIENT_ID_PLACEHOLDER = 'REPLACE_WITH_NEW_YOTO_CLIENT_ID'
 
 export const YOTO_CLIENT_ID =
-  (import.meta.env?.VITE_YOTO_CLIENT_ID as string | undefined) ?? CLIENT_ID_PLACEHOLDER
+  (import.meta.env?.VITE_YOTO_CLIENT_ID as string | undefined) ?? 'QaGoMF0B15GsRGT7zCreVA0Ae6zP5cFf'
 
 const SESSION_KEY = 'mixtape.yoto.session'
 const VERIFIER_KEY = 'mixtape.yoto.pkce_verifier'
