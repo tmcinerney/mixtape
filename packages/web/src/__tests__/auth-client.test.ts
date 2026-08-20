@@ -140,6 +140,17 @@ describe('handleRedirectCallback', () => {
 })
 
 describe('getAccessTokenSilently', () => {
+  // AIDEV-NOTE: Fake timers here are load-bearing, not tidiness. A client built on an
+  // expired session schedules a 0ms proactive refresh in its constructor. Under real
+  // timers that fires as a macrotask mid-test and races the assertions below.
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   function clientWithExpiredSession(refreshToken: string | null) {
     localStorage.setItem(
       'mixtape.yoto.session',
@@ -228,6 +239,71 @@ describe('getAccessTokenSilently', () => {
 
   it('throws when there is no session at all', async () => {
     await expect(authClient.getAccessTokenSilently()).rejects.toThrow(/Not authenticated/)
+  })
+})
+
+describe('proactive refresh', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  // AIDEV-NOTE: useYotoQuery never calls getAccessTokenSilently, so without this timer
+  // an app left open past expiry 401s on the next card click rather than staying in.
+  it('renews the token before it expires, with nobody asking', async () => {
+    localStorage.setItem(
+      'mixtape.yoto.session',
+      JSON.stringify({
+        accessToken: 'first',
+        refreshToken: 'refresh-1',
+        expiresAt: Date.now() + 120_000,
+        scope: YOTO_SCOPES,
+      }),
+    )
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          access_token: 'second',
+          refresh_token: 'refresh-2',
+          token_type: 'Bearer',
+          expires_in: 86400,
+          scope: YOTO_SCOPES,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const client = new AuthClient()
+    expect(fetchMock).not.toHaveBeenCalled()
+
+    // Expiry is 120s out and the skew is 60s, so the timer is armed for 60s.
+    await vi.advanceTimersByTimeAsync(61_000)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(client.getSession()?.accessToken).toBe('second')
+    client.logout()
+  })
+
+  it('arms no timer when there is no refresh token', () => {
+    localStorage.setItem(
+      'mixtape.yoto.session',
+      JSON.stringify({
+        accessToken: 'only',
+        refreshToken: null,
+        expiresAt: Date.now() + 120_000,
+        scope: YOTO_SCOPES,
+      }),
+    )
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+    const client = new AuthClient()
+
+    vi.advanceTimersByTime(600_000)
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    client.logout()
   })
 })
 

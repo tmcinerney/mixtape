@@ -143,6 +143,32 @@ export class AuthClient {
   // against a rotating refresh token invalidate each other and log the user out.
   #refreshInFlight: Promise<string> | null = null
   #loading = false
+  // AIDEV-NOTE: Proactive refresh timer. Without it nothing renews the token until
+  // something calls getAccessTokenSilently, and useYotoQuery never does — so an app
+  // left open past expiry 401s on the next card click instead of staying signed in.
+  #refreshTimer: ReturnType<typeof setTimeout> | null = null
+
+  constructor() {
+    this.#scheduleRefresh()
+  }
+
+  #scheduleRefresh(): void {
+    if (this.#refreshTimer !== null) {
+      clearTimeout(this.#refreshTimer)
+      this.#refreshTimer = null
+    }
+
+    const session = this.#session
+    if (!session?.refreshToken) return
+
+    // Clamped at 0, so a session restored after expiry refreshes on the next tick.
+    const delay = Math.max(0, session.expiresAt - Date.now() - EXPIRY_SKEW_MS)
+    this.#refreshTimer = setTimeout(() => {
+      this.#refreshTimer = null
+      // Errors are already handled by #refresh, which clears the session.
+      void this.getAccessTokenSilently().catch(() => {})
+    }, delay)
+  }
 
   subscribe = (listener: Listener): (() => void) => {
     this.#listeners.add(listener)
@@ -156,6 +182,7 @@ export class AuthClient {
   #setSession(session: Session | null): void {
     this.#session = session
     writeSession(session)
+    this.#scheduleRefresh()
     this.#emit()
   }
 

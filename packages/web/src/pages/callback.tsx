@@ -26,7 +26,7 @@ export function CallbackPage() {
 
   if (error) {
     return (
-      <div className="callback-error">
+      <div>
         <p>Login failed: {error}</p>
         <button onClick={() => void authClient.loginWithRedirect('/')}>Try again</button>
       </div>

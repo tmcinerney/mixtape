@@ -150,7 +150,7 @@ mixtape/
 - [x] Backend framework → **Hono + Zod**
 - [x] Progress reporting → **SSE**
 - [x] Error handling → **Specific yt-dlp error mapping**
-- [x] PKCE token refresh → **Proactive silent refresh via refresh token**
+- [x] PKCE token refresh → **Proactive silent refresh** on a timer in `auth-client.ts`, scheduled 60s before expiry, with concurrent calls collapsed into one request
 - [x] Upload flow → **Backend handles full pipeline** (frontend passes token per-job)
 - [x] Backend rate limiting → **In-memory queue, max 3 concurrent jobs**
 - [x] Which homelab host → **apollo**

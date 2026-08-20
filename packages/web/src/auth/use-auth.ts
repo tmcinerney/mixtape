@@ -3,6 +3,8 @@ import { authClient } from './auth-client'
 
 export interface UseAuthResult {
   isAuthenticated: boolean
+  /** Current access token, or null. Changes identity on every refresh. */
+  accessToken: string | null
   isLoading: boolean
   loginWithRedirect: (returnTo?: string) => Promise<void>
   logout: () => void
@@ -21,6 +23,7 @@ export function useAuth(): UseAuthResult {
 
   return {
     isAuthenticated: session !== null,
+    accessToken: session?.accessToken ?? null,
     isLoading,
     loginWithRedirect: authClient.loginWithRedirect,
     logout: authClient.logout,
