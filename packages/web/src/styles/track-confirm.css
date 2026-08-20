@@ -91,3 +91,38 @@
   justify-content: center;
   margin-top: var(--space-xl);
 }
+
+/* AIDEV-NOTE: Yoto icons are 16x16 pixel art. Scaled up they need pixelated rendering,
+   or the browser smooths them into mush. */
+.track-confirm-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.track-confirm-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.track-confirm-icon-preview {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.track-confirm-icon-clear {
+  background: none;
+  border: none;
+  color: var(--color-text-muted, #888);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  text-decoration: underline;
+}
+
+.track-confirm-icon-clear:hover {
+  color: var(--color-text, #eee);
+}

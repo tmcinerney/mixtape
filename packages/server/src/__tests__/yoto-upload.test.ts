@@ -47,6 +47,53 @@ describe('computeSha256', () => {
   })
 })
 
+describe('transcode polling keeps the SSE stream warm', () => {
+  // AIDEV-NOTE: Regression test. Progress used to be emitted only when Yoto's `percent`
+  // changed. Yoto parks that number near the end of a transcode, so the SSE stream went
+  // silent for minutes and Traefik's default 180s idle timeout reaped the connection,
+  // freezing the browser on the last percentage. Every poll must emit something.
+  it('emits progress on every poll, even when percent does not move', async () => {
+    mockFetch.mockResolvedValueOnce(uploadUrlResponse('https://s3.example.com/presigned'))
+    mockFetch.mockResolvedValueOnce({ ok: true }) // S3 PUT
+    // Three polls parked at 95, then completion.
+    mockFetch.mockResolvedValueOnce(transcodeResponse('transcoding', null, 95))
+    mockFetch.mockResolvedValueOnce(transcodeResponse('transcoding', null, 95))
+    mockFetch.mockResolvedValueOnce(transcodeResponse('transcoding', null, 95))
+    mockFetch.mockResolvedValueOnce(transcodeResponse('complete', 'hash-abc', 95))
+
+    const onProgress = vi.fn()
+    await uploadToYoto('/tmp/test.m4a', 'test-token', onProgress, { pollIntervalMs: 0 })
+
+    const transcodeCalls = onProgress.mock.calls.filter(([step]) => step === 'transcode')
+    // initial 0, three parked polls, then 100 on completion
+    expect(transcodeCalls.length).toBeGreaterThanOrEqual(5)
+    expect(transcodeCalls.at(-1)).toEqual(['transcode', 100])
+  })
+
+  it('carries the last known percent forward when Yoto omits it', async () => {
+    mockFetch.mockResolvedValueOnce(uploadUrlResponse('https://s3.example.com/presigned'))
+    mockFetch.mockResolvedValueOnce({ ok: true })
+    mockFetch.mockResolvedValueOnce(transcodeResponse('transcoding', null, 60))
+    // Yoto drops `percent` entirely on this poll.
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ transcode: { progress: { phase: 'transcoding' } } }),
+    })
+    mockFetch.mockResolvedValueOnce(transcodeResponse('complete', 'hash-abc'))
+
+    const onProgress = vi.fn()
+    await uploadToYoto('/tmp/test.m4a', 'test-token', onProgress, { pollIntervalMs: 0 })
+
+    const percents = onProgress.mock.calls
+      .filter(([step]) => step === 'transcode')
+      .map(([, pct]) => pct)
+
+    // Must not collapse back to 0 when the field is missing.
+    expect(percents).toContain(60)
+    expect(percents.filter((p) => p === 0).length).toBe(1) // only the initial emit
+  })
+})
+
 describe('uploadToYoto', () => {
   it('requests a presigned URL with correct params', async () => {
     mockFetch.mockResolvedValueOnce(uploadUrlResponse('https://s3.example.com/presigned'))
