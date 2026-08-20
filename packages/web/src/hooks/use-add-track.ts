@@ -49,14 +49,24 @@ export function useAddTrack() {
           ...(iconRef ? { display: { icon16x16: iconRef } } : {}),
           // AIDEV-NOTE: Yoto API requires `trackUrl` (not `url`) and `key` on each track.
           // Confirmed via network inspection of real card payloads.
+          //
+          // `title` must be set on the TRACK as well as the chapter. Only the chapter
+          // had one, so the player showed a nameless song. Yoto marks track.title
+          // required but accepts the payload without it, so this failed silently rather
+          // than erroring — see the Tracks table in the card content schema.
+          //
+          // `display` likewise belongs on the track, not just the chapter. Yoto's own
+          // example at yoto.dev/myo/uploading-cover-images sets it in both places.
           tracks: [
             {
               key: '01',
+              title,
               trackUrl: mediaUrl,
               format: 'opus',
               channels: 'stereo',
               type: 'audio',
               overlayLabel: String(nextIndex + 1),
+              ...(iconRef ? { display: { icon16x16: iconRef } } : {}),
             },
           ],
         }

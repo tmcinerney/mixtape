@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -72,6 +72,48 @@ describe('CardGrid', () => {
 
     expect(await screen.findByText('Bedtime Stories')).toBeInTheDocument()
     expect(screen.getByText('Morning Songs')).toBeInTheDocument()
+  })
+
+  // AIDEV-NOTE: Regression test. CardGrid owns its own query, so creating a playlist
+  // left the grid stale — the new card only appeared after a full page reload. The
+  // landing page bumps reloadKey to force the refetch.
+  it('refetches when reloadKey changes', async () => {
+    mockGetMyCards.mockResolvedValue(mockCards)
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <CardGrid reloadKey={0} />
+      </MemoryRouter>,
+    )
+    await screen.findByText('Bedtime Stories')
+    expect(mockGetMyCards).toHaveBeenCalledTimes(1)
+
+    rerender(
+      <MemoryRouter>
+        <CardGrid reloadKey={1} />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => expect(mockGetMyCards).toHaveBeenCalledTimes(2))
+  })
+
+  it('does not refetch when reloadKey is unchanged', async () => {
+    mockGetMyCards.mockResolvedValue(mockCards)
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <CardGrid reloadKey={3} />
+      </MemoryRouter>,
+    )
+    await screen.findByText('Bedtime Stories')
+
+    rerender(
+      <MemoryRouter>
+        <CardGrid reloadKey={3} />
+      </MemoryRouter>,
+    )
+
+    expect(mockGetMyCards).toHaveBeenCalledTimes(1)
   })
 
   it('renders an "Add Playlist" card', async () => {

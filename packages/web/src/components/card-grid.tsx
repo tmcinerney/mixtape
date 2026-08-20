@@ -19,6 +19,10 @@ interface CardWithMetadata {
 
 interface CardGridProps {
   onAddPlaylist?: () => void
+  // AIDEV-NOTE: Bump to force a refetch. CardGrid owns its own query, so the landing
+  // page had no way to tell it a playlist had just been created — the new card only
+  // appeared after a full page reload.
+  reloadKey?: number
 }
 
 // AIDEV-NOTE: Rotating card background colors per design spec
@@ -34,14 +38,14 @@ function getCardImage(card: CardWithMetadata): string | undefined {
   )
 }
 
-export function CardGrid({ onAddPlaylist }: CardGridProps) {
+export function CardGrid({ onAddPlaylist, reloadKey = 0 }: CardGridProps) {
   const { isAuthenticated } = useAuth()
   const {
     data: cards,
     loading,
     error,
     refetch,
-  } = useYotoQuery<CardWithMetadata[]>((sdk) => sdk.content.getMyCards())
+  } = useYotoQuery<CardWithMetadata[]>((sdk) => sdk.content.getMyCards(), [reloadKey])
 
   // AIDEV-NOTE: When logged out, hide cards section entirely. Sign-in is
   // handled by the header button or triggered when user submits a URL.
